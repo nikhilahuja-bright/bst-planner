@@ -1,0 +1,11 @@
+.env
+.env.*
+*.key
+*.pem
+node_modules/
+sb-test/
+supabase/.temp/
+supabase/.branches/
+*.log
+test-results/
+*.local.*

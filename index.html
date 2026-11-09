@@ -509,13 +509,193 @@ body.gated #app, body.gated #panel, body.gated #drawer { display: none !importan
 .import-box { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding: 12px; border: 1px dashed var(--border); border-radius: 8px; }
 .last-edited { display: block; }
 @media (max-width: 700px) { .sync-pill .sync-text { display: none; } .sync-pill { padding: 0 9px; } .access-row { grid-template-columns: 32px 1fr 32px 32px; } .access-row select, .access-row .role-badge { grid-column: 2; } }
+
+/* =====================================================================
+   v3 — Microsoft To Do / Planner polish
+   ===================================================================== */
+:root { --col-w: 300px; --card-radius: 12px; --side-w: 232px; --star: #f2b01e; }
+[data-theme="light"] { --star: #d49500; }
+/* layout: sidebar + main */
+#appBody { flex: 1; min-height: 0; display: flex; position: relative; }
+#appBody > #main { flex: 1; min-width: 0; }
+#sidebar { width: var(--side-w); flex: 0 0 var(--side-w); border-right: 1px solid var(--border); background: var(--bg); overflow-y: auto; padding: 10px 8px 16px; display: flex; flex-direction: column; gap: 2px; transition: margin-left .2s ease; }
+body.sidebar-closed #sidebar { margin-left: calc(-1 * var(--side-w)); visibility: hidden; }
+.side-section { display: flex; flex-direction: column; gap: 1px; }
+.side-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 0 10px; border: none; border-radius: 6px; background: transparent; color: var(--text); text-align: left; position: relative; }
+.side-item:hover { background: var(--hover); }
+.side-item.active { background: var(--accent-soft); font-weight: 600; }
+.side-item.active::before { content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; background: var(--accent); }
+.side-ic { width: 20px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-2); }
+.side-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-count { font-size: 12px; color: var(--muted); min-width: 18px; text-align: right; }
+.side-sep { height: 1px; background: var(--border); margin: 8px 6px; }
+.side-head { font-size: 12px; font-weight: 600; color: var(--muted); padding: 4px 10px; text-transform: uppercase; letter-spacing: .04em; }
+.side-close { align-self: flex-end; }
+.sl-myday { color: #f7b500 !important; } .sl-important { color: #e8484f !important; } .sl-planned { color: #2f9e6d !important; }
+.sl-assigned { color: #4f9bed !important; } .sl-completed { color: var(--success) !important; } .sl-all { color: var(--accent) !important; }
+/* top bar: avatar button */
+.avatar-btn { border: none; background: transparent; padding: 2px; border-radius: 50%; display: inline-flex; margin-left: 4px; }
+.avatar-btn:hover .avatar { box-shadow: 0 0 0 2px var(--accent-soft); }
+.avatar-btn .avatar { margin-left: 0; width: 30px; height: 30px; border-color: var(--bg); }
+.acct-head { display: flex; align-items: center; gap: 10px; padding: 8px 10px; min-width: 220px; }
+.acct-who { display: flex; flex-direction: column; min-width: 0; }
+.acct-who b, .acct-who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acct-who span { font-size: 12px; }
+.avatar.xs { width: 18px; height: 18px; font-size: 8px; border-width: 1px; margin-left: 0; }
+.menu-pad { padding: 6px 8px; }
+/* columns */
+.column { border-top: 3px solid transparent; padding-top: 6px; border-radius: 4px; transition: box-shadow .3s; }
+.column.has-color { border-top-style: solid; }
+.column.flash { box-shadow: 0 0 0 2px var(--accent); }
+.col-header { padding: 2px 2px 8px; }
+.count-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 20px; padding: 0 7px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--text-2); font-size: 12px; font-weight: 600; }
+.empty-col { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 22px 10px; margin-top: 2px; border: 1px dashed var(--border); border-radius: var(--card-radius); color: var(--muted); text-align: center; }
+.empty-col .empty-hint { padding: 0; display: inline; opacity: 1; font-size: 13px; }
+.empty-col .empty-add { padding: 0 2px; font-size: 13px; display: inline; }
+.empty-ic { opacity: .7; display: inline-flex; }
+.empty-ic.big { color: var(--accent); opacity: .85; margin-bottom: 8px; }
+/* cards */
+.card { border-radius: var(--card-radius); padding: 10px 12px; }
+.card.pri-border { border-left-width: 3px; padding-left: 10px; }
+.card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.18); transform: translateY(-1px); }
+.card-title { padding-right: 0; }
+.card-actions { display: inline-flex; align-items: center; gap: 0; margin: -4px -6px 0 0; flex-shrink: 0; }
+.card-more { position: static; opacity: 0; }
+.star-btn { color: var(--muted); }
+.star-btn:hover { color: var(--star); }
+.star-btn.on { color: var(--star); }
+.card .star-btn:not(.on) { opacity: 0; }
+.card:hover .star-btn, .card:focus-within .star-btn { opacity: 1; }
+@media (hover: none) { .card .star-btn, .card-more { opacity: 1 !important; } }
+.check-circle { position: relative; }
+.check-circle:hover:not([aria-checked="true"]) { color: var(--accent); }
+.completing .check-circle { background: var(--success); border-color: var(--success); color: #fff; animation: checkPop .3s ease; }
+.card.completing, .list-row.completing { animation: cardDone .3s ease forwards; }
+.card.completing .card-title, .list-row.completing .lr-title { text-decoration: line-through; color: var(--muted); }
+@keyframes checkPop { 0% { transform: scale(.6); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes cardDone { to { opacity: .45; transform: scale(.98); } }
+.card-subs { margin: 8px 0 0 28px; }
+.sub-toggle { display: flex; align-items: center; gap: 8px; width: 100%; border: none; background: transparent; padding: 3px 4px; margin-left: -4px; border-radius: 6px; color: var(--muted); font-size: 12px; }
+.sub-toggle:hover { background: var(--hover); color: var(--text-2); }
+.sub-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; display: block; }
+.sub-bar > span { display: block; height: 100%; background: var(--accent); border-radius: 2px; transition: width .25s; }
+.sub-frac { font-weight: 600; font-variant-numeric: tabular-nums; }
+.card-subs .card-checklist { margin: 6px 0 0; }
+.card-checklist li { min-height: 20px; }
+.cs-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-due { font-size: 11px; color: var(--muted); } .cs-due.late { color: var(--danger); }
+.mini-check { transition: background .15s, border-color .15s; }
+.mini-check:hover { border-color: var(--accent); color: var(--accent); }
+.mini-check.ghost { opacity: .6; }
+.more-subs { border: none; background: transparent; color: var(--accent); font-size: 12px; font-weight: 600; padding: 3px 0; margin-top: 2px; }
+.more-subs:hover { text-decoration: underline; }
+.card-footer { justify-content: space-between; align-items: flex-end; gap: 8px; }
+.card-footer .card-meta { margin-top: 0; flex: 1; min-width: 0; gap: 8px; }
+.card-people { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.assign-btn { opacity: 0; }
+.card:hover .assign-btn, .card:focus-within .assign-btn { opacity: 1; }
+.created-at { color: var(--muted); opacity: .85; white-space: nowrap; }
+.myday-ic { color: #f7b500; }
+.all-done { color: var(--success); }
+.due-chip { font-weight: 600; white-space: nowrap; }
+.due-chip.late, .due-chip.overdue { background: transparent; color: var(--danger); }
+.due-chip.today { color: var(--accent-strong); }
+.due-chip.soon { color: var(--text-2); }
+.due-chip.later { color: var(--muted); font-weight: 400; }
+body.density-compact .card { padding: 6px 10px; }
+body.density-compact .card.pri-border { padding-left: 8px; }
+body.density-compact .card-labels { margin-bottom: 4px; }
+body.density-compact .card-footer { margin-top: 4px; }
+body.density-compact .task-list { gap: 5px; }
+body.density-compact .card-subs { margin-top: 4px; }
+body.density-compact .list-row { min-height: 40px; padding-top: 4px; padding-bottom: 4px; }
+/* quick add */
+.quick-add { border-radius: var(--card-radius); gap: 6px; }
+.qa-subs { display: flex; flex-direction: column; gap: 2px; }
+.qa-sub { display: flex; align-items: center; gap: 6px; padding-left: 4px; }
+.qa-sub .input { height: 28px; background: transparent; border-color: transparent; padding: 0 6px; }
+.qa-sub .input:focus { border-color: var(--accent); background: var(--bg-2); }
+.qa-add-sub { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; border: none; background: transparent; color: var(--accent); font-size: 13px; font-weight: 600; padding: 3px 4px; border-radius: 6px; }
+.qa-add-sub:hover { background: var(--hover); }
+.qa-hint { font-size: 11px; }
+/* detail panel */
+.panel-title-row .panel-title { flex: 1; }
+.panel-stamps { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--muted); margin-top: -10px; padding-left: 30px; }
+.panel-quick { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill-btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); }
+.pill-btn:hover { background: var(--hover); color: var(--text); }
+.pill-btn.on { color: #f7b500; border-color: rgba(247,181,0,.45); background: rgba(247,181,0,.10); }
+.sub-row { position: relative; }
+.sub-row .input { flex: 1; min-width: 0; }
+.sub-chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border); background: var(--surface); border-radius: 10px; height: 22px; padding: 0 6px; font-size: 11px; flex-shrink: 0; }
+.sub-chip.person { padding: 0 2px; border-radius: 50%; width: 22px; justify-content: center; }
+.sub-actions { display: inline-flex; gap: 0; opacity: 0; transition: opacity .12s; }
+.sub-row:hover .sub-actions, .sub-row:focus-within .sub-actions { opacity: 1; }
+@media (hover: none) { .sub-actions { opacity: 1; } }
+.sub-add { align-items: center; }
+.sub-add-ic { color: var(--accent); display: inline-flex; padding: 0 2px 0 6px; }
+/* grid */
+.cell-created { color: var(--muted); white-space: nowrap; font-size: 13px; }
+.cell-title { display: flex; align-items: center; gap: 2px; }
+.cell-title .star-btn:not(.on) { opacity: 0; }
+table.grid tr:hover .cell-title .star-btn, .cell-title .star-btn:focus-visible { opacity: 1; }
+/* smart lists (To Do style) */
+.list-wrap { height: 100%; overflow-y: auto; padding: 24px clamp(14px, 4vw, 48px) 40px; }
+.list-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.list-head h1 { margin: 0; font-size: 24px; font-weight: 700; }
+.list-ic { display: inline-flex; }
+.list-add { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 12px; border-radius: var(--card-radius); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--card-shadow); margin-bottom: 12px; }
+.list-add:focus-within { border-color: var(--accent); }
+.list-add .input { border: none; background: transparent; height: 36px; padding: 0 4px; }
+.list-add-ic { color: var(--accent); display: inline-flex; }
+.list-bucket { width: 160px; flex: 0 0 160px; height: 30px; }
+.list-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.list-row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 8px 6px 14px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--card-shadow); cursor: pointer; transition: background .12s; }
+.list-row:hover { background: var(--surface-2); }
+.list-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.lr-main { flex: 1; min-width: 0; }
+.lr-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list-row.done .lr-title { text-decoration: line-through; color: var(--muted); }
+.lr-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.lr-meta .m { display: inline-flex; align-items: center; gap: 4px; }
+.list-row .star-btn { flex-shrink: 0; }
+.list-empty { display: flex; flex-direction: column; align-items: center; padding: 48px 16px; }
+.list-empty p { margin: 0; max-width: 340px; }
+.done-rows { margin-top: 4px; }
+/* loading skeleton */
+#gate[data-gate="loading"] { align-items: stretch; justify-content: stretch; padding: 0; }
+.gate-skeleton { width: 100%; display: flex; flex-direction: column; }
+.skel-top { display: flex; align-items: center; gap: 14px; height: 56px; padding: 0 16px; border-bottom: 1px solid var(--border); }
+.skel-top .skel-dot { margin-left: auto; width: 30px; height: 30px; border-radius: 50%; }
+.skel-cols { display: flex; gap: 12px; padding: 22px 16px; overflow: hidden; }
+.skel-col { width: var(--col-w); flex: 0 0 var(--col-w); display: flex; flex-direction: column; gap: 10px; }
+.skel-card { height: 78px; border-radius: var(--card-radius); background: var(--surface); border: 1px solid var(--border); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.skel-bar, .skel-dot { display: block; height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--surface-2) 0%, var(--hover) 50%, var(--surface-2) 100%); background-size: 200% 100%; animation: skel 1.2s ease-in-out infinite; }
+.skel-col > .skel-bar { height: 16px; margin: 4px 0 6px; }
+@keyframes skel { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+/* responsive */
+@media (max-width: 700px) {
+  :root { --col-w: 86vw; }
+  #sidebar { position: fixed; top: 0; bottom: 0; left: 0; z-index: 700; width: min(290px, 84vw); margin-left: 0 !important; visibility: visible !important; transform: translateX(-105%); transition: transform .2s ease; box-shadow: var(--shadow); background: var(--bg-2); }
+  body.sidebar-mobile-open #sidebar { transform: none; }
+  body.sidebar-mobile-open::after { content: ''; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 650; }
+  .tb-left .project-chip { display: none; }
+  .card .star-btn, .card-more, .assign-btn { opacity: 1; }
+  .list-bucket { width: 110px; flex-basis: 110px; }
+  .list-wrap { padding: 16px 10px 32px; }
+  .panel-stamps { padding-left: 0; }
+  .skel-col:nth-child(n+2) { display: none; }
+}
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
 <div id="app">
   <header id="topbar" role="banner"></header>
-  <main id="main" role="main" aria-live="polite"></main>
+  <div id="appBody">
+    <nav id="sidebar" aria-label="Lists"></nav>
+    <main id="main" role="main" aria-live="polite"></main>
+  </div>
 </div>
 <aside id="panel" role="dialog" aria-modal="false" aria-label="Task details" tabindex="-1"></aside>
 <aside id="drawer" role="dialog" aria-modal="false" aria-label="Filters" tabindex="-1"></aside>
@@ -548,7 +728,11 @@ const PROGRESS = ['notstarted', 'inprogress', 'completed'];
 const PRIORITY = ['urgent', 'important', 'medium', 'low'];
 const REPEAT = ['none', 'daily', 'weekly', 'monthly'];
 const DUE_GROUPS = ['late', 'today', 'tomorrow', 'thisweek', 'nextweek', 'future', 'nodate'];
-const GROUP_BYS = ['bucket', 'progress', 'priority', 'due', 'assigned', 'labels'];
+const GROUP_BYS = ['bucket', 'progress', 'priority', 'due', 'assigned', 'labels', 'created'];
+const CREATED_GROUPS = ['today', 'yesterday', 'thisweek', 'lastweek', 'older'];
+const SMART_LISTS = ['myday', 'important', 'planned', 'assigned', 'all', 'completed'];
+const SUBTASK_MODES = ['always', 'collapsed', 'never'];
+const CARD_SUBTASKS = 3; // subtasks shown on a card before "+n more"
 const VIEWS = ['grid', 'board', 'calendar', 'charts'];
 /* 25 label colours (Planner palette inspired) */
 const LABEL_PALETTE = ['#e86fa5', '#e8484f', '#f2b619', '#6bb700', '#4f9bed', '#9b7ee0', '#b3754a', '#a8cf3f', '#2cc7d4', '#a19f9d',
@@ -558,6 +742,7 @@ const BUCKET_COLORS = ['', '#7f85f5', '#4f9bed', '#2cc7d4', '#6bb700', '#f2b619'
 const AVATAR_COLORS = ['#7f85f5', '#c239b3', '#038387', '#498205', '#ca5010', '#4f6bed', '#d13438', '#8764b8'];
 const STATUS_COLORS = { notstarted: '#a19f9d', inprogress: '#4f6bed', late: '#d13438', completed: '#6bb700' };
 const PRIORITY_COLORS = { urgent: '#d13438', important: '#f7630c', medium: '#6bb700', low: '#4f9bed' };
+const PRIORITY_BORDER = { urgent: '#e8484f', important: '#f7630c', medium: '', low: '#8a8886' };
 
 /* ======================= 2. INTERNATIONALISATION ====================== */
 const I18N = {
@@ -854,9 +1039,10 @@ function defaultData() {
     version: 1,
     board: {
       name: DEFAULT_BOARD_NAME, theme: 'dark', lang: 'en', weekStart: 1, view: 'board', groupBy: 'bucket', calMode: 'month',
-      currentUserId: 'm_ad', completedOpen: {}, collapsedGroups: {}
+      currentUserId: 'm_ad', completedOpen: {}, collapsedGroups: {},
+      sidebar: true, density: 'comfortable', sideList: '', cardOpen: {}
     },
-    buckets, members, labels, tasks
+    buckets, members, labels, tasks, settings: {}
   };
 }
 
@@ -872,7 +1058,8 @@ function normalizeTask(t) {
     assignees: Array.isArray(t.assignees) ? t.assignees.slice() : [],
     labels: Array.isArray(t.labels) ? t.labels.slice() : [],
     notes: String(t.notes || ''),
-    checklist: Array.isArray(t.checklist) ? t.checklist.map(c => ({ id: c.id || uid('c'), text: String(c.text || ''), done: !!c.done })) : [],
+    checklist: Array.isArray(t.checklist) ? t.checklist.filter(c => c && typeof c === 'object').map(normalizeSubtask) : [],
+    important: !!t.important,
     showChecklist: !!t.showChecklist,
     attachments: Array.isArray(t.attachments) ? t.attachments.map(a => ({ id: a.id || uid('a'), name: String(a.name || a.url || ''), url: String(a.url || '') })) : [],
     comments: Array.isArray(t.comments) ? t.comments.map(c => ({ id: c.id || uid('cm'), author: c.author || '', text: String(c.text || ''), ts: c.ts || Date.now() })) : [],
@@ -880,6 +1067,13 @@ function normalizeTask(t) {
     created: t.created || Date.now(), modified: t.modified || t.created || Date.now(), createdBy: t.createdBy || '',
     completedAt: t.completedAt || null, completedBy: t.completedBy || null
   };
+}
+/** A subtask (= checklist item). Unknown keys are kept so nothing written by another version is lost. */
+function normalizeSubtask(c) {
+  const o = Object.assign({}, c, { id: c.id || uid('c'), text: String(c.text || ''), done: !!c.done });
+  if (!isValidISO(o.due)) delete o.due;
+  if (!o.assignee || typeof o.assignee !== 'string') delete o.assignee;
+  return o;
 }
 function normalizeState(s) {
   if (!s || typeof s !== 'object' || !Array.isArray(s.buckets) || !Array.isArray(s.tasks)) throw new Error('invalid');
@@ -893,13 +1087,16 @@ function normalizeState(s) {
       color: m.color || AVATAR_COLORS[i % AVATAR_COLORS.length], avatar: m.avatar || '', email: m.email || ''
     })),
     labels: (s.labels || []).slice(0, MAX_LABELS).map((l, i) => ({ id: l.id || uid('l'), name: String(l.name || ''), color: l.color || LABEL_PALETTE[i % 25] })),
-    tasks: s.tasks.map(normalizeTask)
+    tasks: s.tasks.map(normalizeTask),
+    settings: s.settings && typeof s.settings === 'object' && !Array.isArray(s.settings) ? clone(s.settings) : {}
   };
   if (!out.buckets.length) out.buckets.push({ id: uid('b'), name: 'To Do', color: '', collapsed: false });
   if (!VIEWS.includes(out.board.view)) out.board.view = 'board';
   if (!GROUP_BYS.includes(out.board.groupBy)) out.board.groupBy = 'bucket';
   out.board.completedOpen = out.board.completedOpen || {};
   out.board.collapsedGroups = out.board.collapsedGroups || {};
+  out.board.cardOpen = out.board.cardOpen && typeof out.board.cardOpen === 'object' ? out.board.cardOpen : {};
+  if (out.board.sideList && !SMART_LISTS.includes(out.board.sideList)) out.board.sideList = '';
   const bucketIds = new Set(out.buckets.map(b => b.id));
   out.tasks.forEach(t => { if (!bucketIds.has(t.bucketId)) t.bucketId = out.buckets[0].id; });
   return out;
@@ -963,8 +1160,9 @@ function createTask(fields) {
 }
 /** Mark complete / incomplete. Completing a repeating task spawns the next occurrence. */
 function setCompleted(task, done) {
+  let spawned = null;
   if (done) {
-    if (task.progress === 'completed') return;
+    if (task.progress === 'completed') return null;
     task.progress = 'completed'; task.completedAt = Date.now(); task.completedBy = (currentUser() || {}).id || null;
     if (task.repeat && task.repeat !== 'none') {
       const base = task.due || todayISO();
@@ -977,7 +1175,7 @@ function setCompleted(task, done) {
         assignees: task.assignees.slice(), labels: task.labels.slice(), notes: task.notes, showChecklist: task.showChecklist,
         checklist: task.checklist.map(c => ({ id: uid('c'), text: c.text, done: false })), attachments: clone(task.attachments)
       });
-      next.order = task.order;
+      next.order = task.order; spawned = next;
       task.repeat = 'none'; // the series continues on the new occurrence
       toast(t('nextOccurrence', { date: fmtShort(nextDue) }));
     }
@@ -985,8 +1183,27 @@ function setCompleted(task, done) {
     task.progress = 'notstarted'; task.completedAt = null; task.completedBy = null;
   }
   touch(task);
+  return spawned;
 }
-function toggleComplete(task) { setCompleted(task, task.progress !== 'completed'); commit({ panel: true }); }
+/** Tick / untick. Completing shows a short check animation and a "Completed" toast with Undo. */
+function toggleComplete(task, sourceEl) {
+  const completing = task.progress !== 'completed';
+  const before = { progress: task.progress, repeat: task.repeat, completedAt: task.completedAt, completedBy: task.completedBy };
+  const spawned = setCompleted(task, completing);
+  if (!completing) { commit({ panel: true }); return; }
+  save();
+  const host = sourceEl && sourceEl.closest ? sourceEl.closest('.card, .list-row') : null;
+  if (host && document.body.contains(host)) {
+    host.classList.add('completing');
+    setTimeout(() => { renderTopbar(); renderMain(); if (ui.openTaskId) renderPanel(); }, 150);
+  } else { renderTopbar(); renderMain(); if (ui.openTaskId) renderPanel(); }
+  toast(t('completedToast'), t('undo'), () => {
+    if (!taskById(task.id)) return;
+    Object.assign(task, before); touch(task);
+    if (spawned) state.tasks = state.tasks.filter(x => x.id !== spawned.id);
+    commit({ panel: true });
+  }, 6000);
+}
 
 function duplicateTask(task) {
   const copy = clone(task);
@@ -1042,6 +1259,7 @@ function getGroups() {
     case 'due': return DUE_GROUPS.map(k => ({ key: k, title: t('due_' + k), color: k === 'late' ? STATUS_COLORS.late : '' }));
     case 'assigned': return state.members.map(m => ({ key: m.id, title: m.name, member: m })).concat([{ key: 'none', title: t('unassigned') }]);
     case 'labels': return state.labels.map(l => ({ key: l.id, title: labelText(l), color: l.color })).concat([{ key: 'none', title: t('noLabel') }]);
+    case 'created': return CREATED_GROUPS.map(k => ({ key: k, title: t('cr_' + k) }));
     default: return state.buckets.map(b => ({ key: b.id, title: b.name, color: b.color, bucket: b }));
   }
 }
@@ -1053,6 +1271,7 @@ function taskGroupKeys(task) {
     case 'due': return [dueGroup(task.due)];
     case 'assigned': { const a = task.assignees.filter(memberById); return a.length ? a : ['none']; }
     case 'labels': { const l = task.labels.filter(labelById); return l.length ? l : ['none']; }
+    case 'created': return [createdGroup(task.created)];
     default: return [task.bucketId];
   }
 }
@@ -1060,6 +1279,7 @@ function taskGroupKeys(task) {
 function applyGroupMove(task, fromKey, toKey) {
   if (fromKey === toKey) return true;
   const T = todayISO();
+  if (state.board.groupBy === 'created') { toast(t('createdMove')); return false; }
   switch (state.board.groupBy) {
     case 'progress':
       if (toKey === 'completed') setCompleted(task, true);
@@ -1106,6 +1326,7 @@ function fieldsForGroup(key) {
     }
     case 'assigned': return key === 'none' ? {} : { assignees: [key] };
     case 'labels': return key === 'none' ? {} : { labels: [key] };
+    case 'created': return {};
     default: return { bucketId: key };
   }
 }
@@ -1136,6 +1357,162 @@ function matchesFilters(task) {
 }
 const visibleTasks = () => state.tasks.filter(matchesFilters);
 const byOrder = (a, b) => (a.order - b.order) || (b.created - a.created);
+/** Starred (important) tasks first, then the manual order. */
+const byStarOrder = (a, b) => ((b.important ? 1 : 0) - (a.important ? 1 : 0)) || byOrder(a, b);
+
+/* ================== v3: Microsoft To Do style helpers ================== */
+Object.assign(I18N.en, {
+  checklist: 'Subtasks', addItem: 'Add subtask', checklistCount: 'Subtasks {a} of {b}',
+  completedToast: 'Completed', createdMove: 'A task\u2019s created date can\u2019t be changed.',
+  gb_created: 'Created date', cr_today: 'Today', cr_yesterday: 'Yesterday', cr_thisweek: 'This week', cr_lastweek: 'Last week', cr_older: 'Older',
+  createdShort: 'Created {date}', createdTip: 'Created by {who} \u00b7 {when}', createdHead: 'Created by {who} on {when}',
+  modifiedHead: 'Last modified by {who} on {when}', modifiedHeadNoWho: 'Last modified on {when}', createdCol: 'Created',
+  overdue: 'Overdue', star: 'Mark as important', unstar: 'Remove importance', importantTag: 'Important',
+  addMyDay: 'Add to My Day', removeMyDay: 'Remove from My Day', addedMyDay: 'Added to My Day', inMyDay: 'My Day',
+  sl_myday: 'My Day', sl_important: 'Important', sl_planned: 'Planned', sl_assigned: 'Assigned to me', sl_all: 'All tasks', sl_completed: 'Completed',
+  sle_myday: 'Nothing on your list for today. Use \u201cAdd to My Day\u201d on any task \u2014 the list starts fresh every morning.',
+  sle_important: 'Star a task to see it here.', sle_planned: 'Tasks with a due date show up here.', sle_assigned: 'Tasks assigned to you show up here.',
+  sle_all: 'No tasks yet \u2014 add one.', sle_completed: 'Completed tasks show up here.',
+  buckets: 'Buckets', toggleSidebar: 'Show / hide lists', lists: 'Lists',
+  addSubtask: 'Add subtask', subtasks: 'Subtasks', promote: 'Promote to task', promoted: 'Subtask promoted to a task',
+  subDue: 'Due date', subAssign: 'Assign', clearDate: 'Remove due date', unassignSub: 'Unassign',
+  moreSubs: '+{n} more', showLess: 'Show less', expandSubs: 'Show subtasks', collapseSubs: 'Hide subtasks',
+  showSubtasks: 'Show subtasks on cards', ss_always: 'Always', ss_collapsed: 'Collapsed', ss_never: 'Never',
+  density: 'Card density', comfortable: 'Comfortable', compact: 'Compact',
+  emptyCol: 'No tasks yet', addOne: '\u2014 add one', quickAddHint: 'Enter adds the task \u00b7 Ctrl+Enter saves it with all subtasks',
+  addedWithSubs: 'Task added with {n} subtask(s)', account: 'Account', subtaskN: 'Subtask {n}', removeSubtask: 'Remove subtask',
+  myDayHeader: '{date}', openTask: 'Open task', importantFirst: 'Starred tasks are pinned to the top of their bucket.'
+});
+Object.assign(I18N.de, {
+  checklist: 'Teilaufgaben', addItem: 'Teilaufgabe hinzufügen', checklistCount: 'Teilaufgaben {a} von {b}',
+  completedToast: 'Erledigt', createdMove: 'Das Erstellungsdatum einer Aufgabe kann nicht geändert werden.',
+  gb_created: 'Erstellungsdatum', cr_today: 'Heute', cr_yesterday: 'Gestern', cr_thisweek: 'Diese Woche', cr_lastweek: 'Letzte Woche', cr_older: 'Älter',
+  createdShort: 'Erstellt {date}', createdTip: 'Erstellt von {who} \u00b7 {when}', createdHead: 'Erstellt von {who} am {when}',
+  modifiedHead: 'Zuletzt geändert von {who} am {when}', modifiedHeadNoWho: 'Zuletzt geändert am {when}', createdCol: 'Erstellt',
+  overdue: 'Überfällig', star: 'Als wichtig markieren', unstar: 'Nicht mehr wichtig', importantTag: 'Wichtig',
+  addMyDay: 'Zu „Mein Tag“ hinzufügen', removeMyDay: 'Aus „Mein Tag“ entfernen', addedMyDay: 'Zu „Mein Tag“ hinzugefügt', inMyDay: 'Mein Tag',
+  sl_myday: 'Mein Tag', sl_important: 'Wichtig', sl_planned: 'Geplant', sl_assigned: 'Mir zugewiesen', sl_all: 'Alle Aufgaben', sl_completed: 'Erledigt',
+  sle_myday: 'Für heute steht nichts auf Ihrer Liste. Nutzen Sie „Zu Mein Tag hinzufügen“ – die Liste beginnt jeden Morgen neu.',
+  sle_important: 'Markieren Sie eine Aufgabe mit einem Stern, um sie hier zu sehen.', sle_planned: 'Aufgaben mit Fälligkeitsdatum erscheinen hier.', sle_assigned: 'Ihnen zugewiesene Aufgaben erscheinen hier.',
+  sle_all: 'Noch keine Aufgaben – fügen Sie eine hinzu.', sle_completed: 'Erledigte Aufgaben erscheinen hier.',
+  buckets: 'Buckets', toggleSidebar: 'Listen ein-/ausblenden', lists: 'Listen',
+  addSubtask: 'Teilaufgabe hinzufügen', subtasks: 'Teilaufgaben', promote: 'Zur Aufgabe machen', promoted: 'Teilaufgabe wurde zur Aufgabe',
+  subDue: 'Fälligkeitsdatum', subAssign: 'Zuweisen', clearDate: 'Datum entfernen', unassignSub: 'Zuweisung entfernen',
+  moreSubs: '+{n} weitere', showLess: 'Weniger anzeigen', expandSubs: 'Teilaufgaben anzeigen', collapseSubs: 'Teilaufgaben ausblenden',
+  showSubtasks: 'Teilaufgaben auf Karten', ss_always: 'Immer', ss_collapsed: 'Eingeklappt', ss_never: 'Nie',
+  density: 'Kartendichte', comfortable: 'Komfortabel', compact: 'Kompakt',
+  emptyCol: 'Noch keine Aufgaben', addOne: '– eine hinzufügen', quickAddHint: 'Enter fügt die Aufgabe hinzu · Strg+Enter speichert sie mit allen Teilaufgaben',
+  addedWithSubs: 'Aufgabe mit {n} Teilaufgabe(n) hinzugefügt', account: 'Konto', subtaskN: 'Teilaufgabe {n}', removeSubtask: 'Teilaufgabe entfernen',
+  myDayHeader: '{date}', openTask: 'Aufgabe öffnen', importantFirst: 'Markierte Aufgaben stehen oben in ihrem Bucket.'
+});
+Object.assign(ICONS, {
+  star: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="m8 1.9 1.85 3.85 4.2.55-3.07 2.92.77 4.17L8 11.37 4.25 13.4l.77-4.17L1.95 6.3l4.2-.55z"/></svg>',
+  starFilled: '<svg viewBox="0 0 16 16" fill="currentColor" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="m8 1.9 1.85 3.85 4.2.55-3.07 2.92.77 4.17L8 11.37 4.25 13.4l.77-4.17L1.95 6.3l4.2-.55z"/></svg>',
+  menu: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg>',
+  person: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><circle cx="8" cy="5.3" r="2.8"/><path d="M2.8 14c.4-2.8 2.5-4.6 5.2-4.6s4.8 1.8 5.2 4.6"/></svg>',
+  promote: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3.5M4 7l4-4 4 4M3 14.5h10"/></svg>',
+  allTasks: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M5.5 4h8M5.5 8h8M5.5 12h8"/><circle cx="2.6" cy="4" r=".9" fill="currentColor"/><circle cx="2.6" cy="8" r=".9" fill="currentColor"/><circle cx="2.6" cy="12" r=".9" fill="currentColor"/></svg>',
+  inbox: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M2 9.5 3.8 3h8.4L14 9.5V13H2zM2 9.5h3.5l1 1.5h3l1-1.5H14"/></svg>',
+  chevUp: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4 10 4-4 4 4"/></svg>'
+});
+const SMART_ICONS = { myday: 'sun', important: 'star', planned: 'calendar', assigned: 'person', all: 'allTasks', completed: 'done' };
+
+/** Dates for people: "5 Nov" and "5 Nov 2026, 5:24 PM" (German: "5. Nov." …). */
+function dateLocale() { return state.board.lang === 'de' ? 'de-DE' : 'en-GB'; }
+function fmtDayMonth(ts) {
+  const d = new Date(ts); const o = { day: 'numeric', month: 'short' };
+  if (d.getFullYear() !== new Date().getFullYear()) o.year = 'numeric';
+  return d.toLocaleDateString(dateLocale(), o);
+}
+function fmtFull(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' +
+    d.toLocaleTimeString(state.board.lang === 'de' ? 'de-DE' : 'en-US', { hour: 'numeric', minute: '2-digit' });
+}
+/** Created-date group: Today, Yesterday, This week, Last week, Older (by the board's week start). */
+function createdGroup(ts) {
+  if (!ts) return 'older';
+  const d = toISO(new Date(ts)), T = todayISO();
+  if (d >= T) return 'today';
+  if (d === addDays(T, -1)) return 'yesterday';
+  const sow = startOfWeek(T, state.board.weekStart);
+  if (d >= sow) return 'thisweek';
+  if (d >= addDays(sow, -7)) return 'lastweek';
+  return 'older';
+}
+/** To Do style due label: Overdue (red), Today (blue), Tomorrow, weekday names this week, else "12 Nov". */
+function dueInfo(due) {
+  const T = todayISO();
+  const short = (s) => fmtDayMonth(parseISO(s).getTime());
+  if (due < T) return { cls: 'overdue', text: t('overdue') + ' \u00b7 ' + short(due) };
+  if (due === T) return { cls: 'today', text: t('today') };
+  if (due === addDays(T, 1)) return { cls: 'soon', text: t('due_tomorrow') };
+  const sow = startOfWeek(T, state.board.weekStart);
+  if (due <= addDays(sow, 6)) return { cls: 'soon', text: parseISO(due).toLocaleDateString(locale(), { weekday: 'long' }) };
+  return { cls: '', text: short(due) };
+}
+function dueChip(due, extraCls) {
+  const d = dueInfo(due);
+  return h('span', { class: 'm due-chip ' + d.cls + (extraCls ? ' ' + extraCls : ''), title: t('dueOn', { date: fmtLong(due) }) }, icon('calendar', 13), d.text);
+}
+/** Who created the task (people id stored on the task, else the Supabase user). Real data only, never invented. */
+function creatorName(task) {
+  const m = memberById(task.createdBy);
+  if (m) return m.name;
+  const row = typeof cloud !== 'undefined' && cloud.rows && cloud.rows.tasks ? cloud.rows.tasks[task.id] : null;
+  if (row && row.created_by) return nameForUser(row.created_by);
+  return t('unknown');
+}
+/** Last modification: { who, when } (who is '' when unknown, e.g. local-only mode). */
+function modifierInfo(task) {
+  if (typeof cloud !== 'undefined' && appMode === 'cloud' && cloud.active) {
+    const row = cloud.rows.tasks[task.id];
+    if (pendingOp('tasks', task.id) || !row) return { who: (currentUser() || { name: t('you') }).name, when: task.modified };
+    return { who: nameForUser(row.updated_by), when: toMs(row.updated_at) || task.modified };
+  }
+  return { who: '', when: task.modified };
+}
+function createdTooltip(task) { return t('createdTip', { who: creatorName(task), when: fmtFull(task.created) }); }
+
+/** Board-level display setting (shared with the team; stored in boards.settings). */
+function subtaskMode() { const v = state.settings && state.settings.showSubtasks; return SUBTASK_MODES.includes(v) ? v : 'always'; }
+function isMe(memberId) { const me = currentUser(); return !!me && me.id === memberId; }
+
+/* ---------- My Day: personal, per board, resets every day ----------
+ * Kept in this browser (localStorage) and, when the v3 migration is installed, in the
+ * my_day table so it follows the person to other devices (see 5-cloud.js). */
+const MYDAY_KEY = 'bst-planner-myday';
+const myDay = { day: todayISO(), ids: new Set(), pending: [] };
+function myDayScope() { return appMode === 'cloud' && typeof cloud !== 'undefined' && cloud.boardId ? cloud.boardId + ':' + ((cloud.user && cloud.user.id) || '') : 'local'; }
+function readMyDayStore() { try { return JSON.parse(storage.get(MYDAY_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function saveMyDayLocal() {
+  const all = readMyDayStore();
+  all[myDayScope()] = { day: myDay.day, ids: Array.from(myDay.ids), pending: myDay.pending };
+  storage.set(MYDAY_KEY, JSON.stringify(all));
+}
+function loadMyDayLocal() {
+  const m = readMyDayStore()[myDayScope()];
+  myDay.day = todayISO();
+  const fresh = m && m.day === myDay.day;
+  myDay.ids = new Set(fresh ? m.ids || [] : []);
+  myDay.pending = fresh ? m.pending || [] : [];
+}
+function rollMyDay() { if (myDay.day !== todayISO()) { myDay.day = todayISO(); myDay.ids = new Set(); myDay.pending = []; saveMyDayLocal(); } }
+function inMyDay(task) { rollMyDay(); return myDay.ids.has(task.id); }
+function setMyDay(task, on, quiet) {
+  rollMyDay();
+  if (on) myDay.ids.add(task.id); else myDay.ids.delete(task.id);
+  saveMyDayLocal();
+  if (typeof cloudMyDay === 'function') cloudMyDay(task.id, on);
+  renderMain(); if (ui.openTaskId === task.id) renderPanel();
+  if (on && !quiet) toast(t('addedMyDay'));
+}
+function toggleImportant(task) {
+  task.important = !task.important; touch(task);
+  if (typeof rememberLocalStar === 'function') rememberLocalStar(task);
+  commit({ panel: true });
+}
 
 /* ====================== 8. RENDERING — TOP BAR ====================== */
 function applyTheme() {
@@ -1157,6 +1534,7 @@ function renderTopbar() {
     })
     : h('button', { class: 'board-title', title: t('rename'), 'aria-label': t('boardName') + ': ' + state.board.name, onClick: () => { ui.renamingBoard = true; renderTopbar(); } }, state.board.name);
   const left = h('div', { class: 'tb-left' },
+    h('button', { class: 'icon-btn sidebar-toggle', id: 'sidebarToggle', 'aria-label': t('toggleSidebar'), title: t('toggleSidebar'), 'aria-expanded': String(sidebarVisible()), onClick: toggleSidebar }, icon('menu')),
     h('div', { class: 'project-chip', title: t('projectLabel') + ': ' + PROJECT, 'aria-hidden': 'true' }, PROJECT),
     titleEl,
     h('button', { class: 'icon-btn', 'aria-label': t('menu'), 'aria-haspopup': 'menu', onClick: (e) => openBoardMenu(e.currentTarget) }, icon('more'))
@@ -1164,7 +1542,7 @@ function renderTopbar() {
   // View tabs
   const tabs = h('div', { class: 'tabs', role: 'tablist', 'aria-label': t('views') },
     VIEWS.map(v => h('button', {
-      class: 'tab', role: 'tab', 'aria-selected': String(state.board.view === v), id: 'tab-' + v,
+      class: 'tab', role: 'tab', 'aria-selected': String(!state.board.sideList && state.board.view === v), id: 'tab-' + v,
       onClick: () => setView(v)
     }, icon(VIEW_ICONS[v], 14), t(v)))
   );
@@ -1186,18 +1564,98 @@ function renderTopbar() {
       class: 'icon-btn' + (fc ? ' active' : ''), 'aria-label': t('filter') + (fc ? ' — ' + t('activeFilters', { n: fc }) : ''), title: t('filter'),
       'aria-expanded': String(ui.filterOpen), onClick: () => toggleFilterDrawer()
     }, icon('filter'), fc ? h('span', { class: 'badge' }, String(fc)) : null),
-    state.board.view === 'board' ? h('button', {
+    state.board.view === 'board' && !state.board.sideList ? h('button', {
       class: 'groupby-btn', 'aria-haspopup': 'menu', 'aria-label': t('groupBy') + ': ' + t('gb_' + state.board.groupBy),
       onClick: (e) => openGroupByMenu(e.currentTarget)
     }, h('span', { class: 'gb-text' }, t('groupBy') + ': '), h('b', null, t('gb_' + state.board.groupBy)), icon('chevDown', 14)) : null,
     h('button', { class: 'icon-btn', 'aria-label': t('toggleTheme'), title: t('toggleTheme'), onClick: toggleTheme }, icon(state.board.theme === 'light' ? 'moon' : 'sun')),
-    h('button', { class: 'icon-btn', 'aria-label': t('help'), title: t('help'), onClick: openHelp }, icon('help'))
+    h('button', { class: 'icon-btn', 'aria-label': t('help'), title: t('help'), onClick: openHelp }, icon('help')),
+    accountButton()
   );
   bar.append(left, tabs, right);
   if (ui.renamingBoard) { const i = document.getElementById('boardTitleInput'); i.focus(); i.select(); }
   if (hadSearchFocus) { const s = document.getElementById('searchInput'); if (s) { s.focus(); try { s.setSelectionRange(selStart, selStart); } catch (e) { /* ignore */ } } }
 }
-function setView(v) { state.board.view = v; closeMenu(); save(); renderTopbar(); renderMain(); }
+function setView(v) { state.board.view = v; state.board.sideList = ''; closeMenu(); save(); renderTopbar(); renderMain(); }
+/** Avatar button with the account menu (name, e-mail, settings, theme, sign out). */
+function accountButton() {
+  const me = currentUser();
+  const cloudOn = typeof cloud !== 'undefined' && appMode === 'cloud' && cloud.active;
+  const label = t('account') + (me ? ': ' + me.name : '');
+  return h('button', { class: 'avatar-btn', id: 'accountBtn', 'aria-label': label, title: label, 'aria-haspopup': 'menu', onClick: (e) => openAccountMenu(e.currentTarget) },
+    me ? avatarEl(me) : h('span', { class: 'avatar', style: { background: '#777' } }, icon('person', 14)));
+}
+function openAccountMenu(anchor) {
+  const me = currentUser();
+  const cloudOn = typeof cloud !== 'undefined' && appMode === 'cloud' && cloud.active;
+  const who = h('div', { class: 'acct-head' }, me ? avatarEl(me, 'lg') : null,
+    h('div', { class: 'acct-who' }, h('b', null, me ? me.name : t('unknown')), h('span', { class: 'muted' }, cloudOn ? cloud.email : t('syncLocal'))));
+  openMenu(anchor, [
+    { node: who }, '-',
+    { label: t('settings'), icon: 'gear', onClick: () => openSettings('general') },
+    cloudOn ? { label: t('share'), icon: 'personAdd', onClick: () => openSettings('share') } : null,
+    { label: t('toggleTheme'), icon: state.board.theme === 'light' ? 'moon' : 'sun', onClick: toggleTheme },
+    cloudOn ? '-' : null,
+    cloudOn ? { label: t('signOut'), icon: 'logout', onClick: signOut } : null
+  ].filter(Boolean), { label: t('account') });
+}
+/* ---------- left sidebar: smart lists + buckets ---------- */
+const isMobile = () => window.matchMedia('(max-width: 700px)').matches;
+function sidebarVisible() { return isMobile() ? !!ui.sidebarMobile : state.board.sidebar !== false; }
+function toggleSidebar() {
+  if (isMobile()) ui.sidebarMobile = !ui.sidebarMobile; else { state.board.sidebar = state.board.sidebar === false; save(); }
+  renderSidebar(); const b = document.getElementById('sidebarToggle'); if (b) b.setAttribute('aria-expanded', String(sidebarVisible()));
+}
+function smartListTasks(k, list) {
+  const me = currentUser();
+  const all = list || state.tasks;
+  switch (k) {
+    case 'myday': return all.filter(inMyDay);
+    case 'important': return all.filter(x => x.important);
+    case 'planned': return all.filter(x => !!x.due);
+    case 'assigned': return me ? all.filter(x => x.assignees.includes(me.id)) : [];
+    case 'completed': return all.filter(x => x.progress === 'completed');
+    default: return all.slice();
+  }
+}
+function renderSidebar() {
+  const sb = document.getElementById('sidebar'); if (!sb) return;
+  document.body.classList.toggle('sidebar-closed', state.board.sidebar === false);
+  document.body.classList.toggle('sidebar-mobile-open', !!ui.sidebarMobile);
+  sb.textContent = '';
+  const active = state.board.sideList;
+  const n = (k) => smartListTasks(k).filter(x => k === 'completed' ? true : x.progress !== 'completed').length;
+  const item = (k) => {
+    const c = n(k);
+    return h('button', { class: 'side-item' + (active === k ? ' active' : ''), 'aria-current': active === k ? 'page' : null, dataset: { list: k }, onClick: () => openSmartList(k) },
+      h('span', { class: 'side-ic sl-' + k }, icon(SMART_ICONS[k], 16)), h('span', { class: 'side-label' }, t('sl_' + k)), c ? h('span', { class: 'side-count' }, String(c)) : null);
+  };
+  sb.append(
+    h('div', { class: 'side-section', role: 'list', 'aria-label': t('lists') }, SMART_LISTS.map(item)),
+    h('div', { class: 'side-sep', role: 'separator' }),
+    h('div', { class: 'side-head' }, t('buckets')),
+    h('div', { class: 'side-section' }, state.buckets.map(b => {
+      const c = state.tasks.filter(x => x.bucketId === b.id && x.progress !== 'completed').length;
+      return h('button', { class: 'side-item bucket', dataset: { bucket: b.id }, onClick: () => openBucketFromSidebar(b.id) },
+        h('span', { class: 'side-ic' }, h('span', { class: 'dot', style: { background: b.color || 'var(--border-strong)' } })),
+        h('span', { class: 'side-label' }, b.name), c ? h('span', { class: 'side-count' }, String(c)) : null);
+    })));
+  if (ui.sidebarMobile) sb.prepend(h('button', { class: 'icon-btn side-close', 'aria-label': t('close'), onClick: toggleSidebar }, icon('close')));
+}
+function openSmartList(k) {
+  state.board.sideList = k; ui.sidebarMobile = false; ui.quickAdd = null; closeMenu();
+  save(); renderTopbar(); renderMain();
+  const i = document.getElementById('listAddInput'); if (i && !isMobile()) i.focus({ preventScroll: true });
+}
+function openBucketFromSidebar(id) {
+  const b = bucketById(id); if (!b) return;
+  state.board.sideList = ''; state.board.view = 'board'; ui.sidebarMobile = false;
+  if (state.board.groupBy !== 'bucket') { state.board.groupBy = 'bucket'; ui.quickAdd = null; }
+  b.collapsed = false;
+  commit();
+  const col = document.querySelector(`.column[data-bucket="${id}"]`);
+  if (col) { col.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' }); col.classList.add('flash'); setTimeout(() => col.classList.remove('flash'), 1200); }
+}
 function openSearch() { ui.searchOpen = true; renderTopbar(); const s = document.getElementById('searchInput'); if (s) s.focus(); }
 function toggleTheme() { state.board.theme = state.board.theme === 'light' ? 'dark' : 'light'; applyTheme(); commit({ panel: true }); }
 
@@ -1219,6 +1677,9 @@ function renderMain() {
   const gridEl = main.querySelector('.grid-wrap'); if (gridEl) ui.scroll.grid = gridEl.scrollTop;
   destroyTransient();
   main.textContent = '';
+  renderSidebar();
+  document.body.classList.toggle('density-compact', state.board.density === 'compact');
+  if (state.board.sideList) { renderSmartList(main); return; }
   const v = state.board.view;
   if (v === 'grid') renderGrid(main);
   else if (v === 'calendar') renderCalendar(main);
@@ -1235,7 +1696,7 @@ function renderBoard(main) {
   // Assign tasks to groups
   const map = {}; groups.forEach(g => { map[g.key] = []; });
   tasks.forEach(task => taskGroupKeys(task).forEach(k => { if (map[k]) map[k].push(task); }));
-  groups.forEach(g => board.appendChild(renderColumn(g, (map[g.key] || []).sort(byOrder))));
+  groups.forEach(g => board.appendChild(renderColumn(g, (map[g.key] || []).sort(byStarOrder))));
   if (isBucket) board.appendChild(renderAddBucketColumn());
   main.appendChild(board);
   if (!tasks.length && (ui.search || activeFilterCount())) {
@@ -1247,7 +1708,8 @@ function renderBoard(main) {
   initBoardSortables(board);
   if (ui.focusQuickAdd) {
     ui.focusQuickAdd = false;
-    const qi = board.querySelector('.quick-add input[type="text"]');
+    const subs = board.querySelectorAll('.quick-add .qa-sub-input');
+    const qi = (ui.quickAdd && ui.quickAdd.focusIdx != null && subs[ui.quickAdd.focusIdx]) || board.querySelector('.quick-add input[type="text"]');
     if (qi) { qi.focus(); qi.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
   }
   if (ui.addingBucket) { const bi = document.getElementById('newBucketInput'); if (bi) bi.focus(); }
@@ -1262,7 +1724,7 @@ function renderColumn(g, tasks) {
   const byProgress = state.board.groupBy === 'progress';
   const active = byProgress ? tasks : tasks.filter(x => x.progress !== 'completed');
   const completed = byProgress ? [] : tasks.filter(x => x.progress === 'completed');
-  const colAttrs = { class: 'column', role: 'listitem', 'aria-label': g.title, dataset: { group: g.key } };
+  const colAttrs = { class: 'column' + (g.bucket && g.color ? ' has-color' : ''), role: 'listitem', 'aria-label': g.title, dataset: { group: g.key }, style: g.bucket && g.color ? { borderTopColor: g.color } : null };
   if (g.bucket) colAttrs['data-bucket'] = g.bucket.id;
   // Collapsed bucket/group renders as a slim vertical bar
   if (isGroupCollapsed(g)) {
@@ -1292,10 +1754,9 @@ function renderColumn(g, tasks) {
     : g.iconName ? h('span', { style: { color: g.color } }, icon(g.iconName))
       : (g.color && !g.bucket) ? h('span', { class: 'dot', style: { background: g.color } }) : null;
   const header = h('div', { class: 'col-header' },
-    g.bucket && g.color ? h('span', { class: 'col-stripe', style: { background: g.color } }) : null,
     g.bucket && state.board.groupBy === 'bucket' ? h('span', { class: 'col-drag', title: t('dragBucket'), 'aria-label': t('dragBucket'), role: 'img' }, icon('drag')) : null,
     lead, titleNode,
-    h('span', { class: 'col-count', 'aria-label': tasks.length + ' tasks' }, String(tasks.length)),
+    h('span', { class: 'col-count count-badge', 'aria-label': tasks.length + ' tasks' }, String(tasks.length)),
     h('button', {
       class: 'icon-btn sm', 'aria-label': t('bucketOptions') + ': ' + g.title, 'aria-haspopup': 'menu',
       onClick: (e) => openColumnMenu(e.currentTarget, g)
@@ -1306,11 +1767,12 @@ function renderColumn(g, tasks) {
   if (ui.quickAdd && ui.quickAdd.group === g.key) body.appendChild(renderQuickAdd(g));
   else body.appendChild(h('button', {
     class: 'add-task-btn', 'aria-label': t('addTask') + ' — ' + g.title,
-    onClick: () => { ui.quickAdd = { group: g.key, title: '', due: '', assignee: '' }; ui.focusQuickAdd = true; renderMain(); }
+    onClick: () => openQuickAdd(g.key)
   }, icon('plus'), t('addTask')));
   const activeList = h('div', { class: 'task-list', role: 'list', dataset: { group: g.key, completed: '0' } }, active.map(x => renderCard(x, g.key)));
   body.appendChild(activeList);
-  if (!tasks.length) body.appendChild(h('div', { class: 'empty-hint' }, t('noTasksYet')));
+  if (!tasks.length) body.appendChild(h('div', { class: 'empty-col' }, h('span', { class: 'empty-ic' }, icon('inbox', 22)),
+    h('div', null, h('span', { class: 'empty-hint' }, t('noTasksYet')), ' ', h('button', { class: 'link-btn empty-add', onClick: () => openQuickAdd(g.key) }, t('addOne')))));
   if (completed.length) {
     const openKey = state.board.groupBy + ':' + g.key;
     const open = !!state.board.completedOpen[openKey];
@@ -1324,37 +1786,87 @@ function renderColumn(g, tasks) {
   }
   return h('section', colAttrs, header, body);
 }
-/** Quick add box shown at the top of a column. */
+function openQuickAdd(key) { ui.quickAdd = { group: key, title: '', due: '', assignee: '', subs: [] }; ui.focusQuickAdd = true; renderMain(); }
+/** Split pasted text into lines, dropping list bullets ("- ", "* ", "1. ", "[ ] "). */
+function pastedLines(text) {
+  return String(text || '').split(/\r?\n/).map(x => x.replace(/^\s*(?:[-*\u2022\u2013]|\d+[.)]|\[[ xX]?\])\s+/, '').trim()).filter(Boolean);
+}
+/** Quick add box shown at the top of a column: title, optional subtask lines, due date, assignee. */
 function renderQuickAdd(g) {
-  const qa = ui.quickAdd;
+  const qa = ui.quickAdd; qa.subs = qa.subs || [];
   const create = () => {
     const title = qa.title.trim();
-    if (!title) return;
+    if (!title) { titleIn.focus(); return; }
     const fields = Object.assign({ title }, fieldsForGroup(g.key));
     if (qa.due) fields.due = qa.due;
     if (qa.assignee) fields.assignees = Array.from(new Set((fields.assignees || []).concat([qa.assignee])));
+    const subs = qa.subs.map(x => x.trim()).filter(Boolean);
+    if (subs.length) fields.checklist = subs.map(text => ({ id: uid('c'), text, done: false }));
     createTask(fields);
-    qa.title = ''; ui.focusQuickAdd = true;
+    qa.title = ''; qa.subs = []; qa.focusIdx = null; ui.focusQuickAdd = true;
     commit();
-    toast(t('taskAdded'));
+    toast(subs.length ? t('addedWithSubs', { n: subs.length }) : t('taskAdded'));
   };
   const close = () => { ui.quickAdd = null; renderMain(); };
-  return h('div', { class: 'quick-add', role: 'group', 'aria-label': t('addTask') },
-    h('input', {
-      class: 'input', type: 'text', placeholder: t('taskName'), 'aria-label': t('taskName'), value: qa.title, maxlength: 255,
-      onInput: (e) => { qa.title = e.target.value; },
-      onKeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); create(); } if (e.key === 'Escape') { e.stopPropagation(); close(); } }
-    }),
+  const titleIn = h('input', {
+    class: 'input qa-title', type: 'text', placeholder: t('taskName'), 'aria-label': t('taskName'), value: qa.title, maxlength: 255,
+    onFocus: () => { qa.focusIdx = null; },
+    onInput: (e) => { qa.title = e.target.value; },
+    onKeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); create(); } if (e.key === 'Escape') { e.stopPropagation(); close(); } },
+    onPaste: (e) => { // several lines pasted into the title: first line = title, the rest = subtasks
+      const lines = pastedLines((e.clipboardData || window.clipboardData).getData('text'));
+      if (lines.length < 2) return;
+      e.preventDefault(); qa.title = lines[0]; titleIn.value = lines[0]; qa.subs = qa.subs.concat(lines.slice(1)); drawSubs(qa.subs.length - 1);
+    }
+  });
+  const subsHost = h('div', { class: 'qa-subs', role: 'list', 'aria-label': t('subtasks') });
+  const drawSubs = (focusIdx) => {
+    subsHost.textContent = '';
+    qa.subs.forEach((v, i) => subsHost.appendChild(h('div', { class: 'qa-sub', role: 'listitem' },
+      h('span', { class: 'mini-check ghost', 'aria-hidden': 'true' }),
+      h('input', {
+        class: 'input qa-sub-input', value: v, placeholder: t('subtaskN', { n: i + 1 }), 'aria-label': t('subtaskN', { n: i + 1 }), maxlength: 200,
+        onFocus: () => { qa.focusIdx = i; },
+        onInput: (e) => { qa.subs[i] = e.target.value; },
+        onKeydown: (e) => {
+          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); create(); return; }
+          if (e.key === 'Enter') { e.preventDefault(); qa.subs.splice(i + 1, 0, ''); drawSubs(i + 1); return; }
+          if (e.key === 'Backspace' && !e.target.value) { e.preventDefault(); qa.subs.splice(i, 1); if (i > 0) drawSubs(i - 1); else { drawSubs(); qa.focusIdx = null; titleIn.focus(); } return; }
+          if (e.key === 'ArrowUp' && i > 0) { e.preventDefault(); subsHost.querySelectorAll('input')[i - 1].focus(); }
+          if (e.key === 'ArrowDown' && i < qa.subs.length - 1) { e.preventDefault(); subsHost.querySelectorAll('input')[i + 1].focus(); }
+          if (e.key === 'Escape') { e.stopPropagation(); close(); }
+        },
+        onPaste: (e) => {
+          const lines = pastedLines((e.clipboardData || window.clipboardData).getData('text'));
+          if (lines.length < 2) return;
+          e.preventDefault();
+          const el = e.target, cur = el.value, a = el.selectionStart || 0, b = el.selectionEnd || 0;
+          qa.subs[i] = (cur.slice(0, a) + lines[0] + cur.slice(b)).trim();
+          qa.subs.splice(i + 1, 0, ...lines.slice(1));
+          drawSubs(i + lines.length - 1);
+        }
+      }),
+      h('button', { class: 'icon-btn sm', type: 'button', tabindex: -1, 'aria-label': t('removeSubtask'), title: t('removeSubtask'), onClick: () => { qa.subs.splice(i, 1); drawSubs(Math.min(i, qa.subs.length - 1)); } }, icon('close', 12)))));
+    if (focusIdx != null && focusIdx >= 0) { const el = subsHost.querySelectorAll('input')[focusIdx]; if (el) { el.focus(); try { el.setSelectionRange(el.value.length, el.value.length); } catch (err) { /* ignore */ } } }
+  };
+  drawSubs();
+  // Ctrl+Enter anywhere in the box saves the task with all its subtasks
+  const box = h('div', { class: 'quick-add', role: 'group', 'aria-label': t('addTask'),
+    onKeydown: (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.defaultPrevented) { e.preventDefault(); create(); } } },
+    titleIn, subsHost,
+    h('button', { class: 'qa-add-sub', type: 'button', id: 'qaAddSub', onClick: () => { qa.subs.push(''); drawSubs(qa.subs.length - 1); } }, icon('plus', 14), t('addSubtask')),
     h('div', { class: 'row' },
       h('input', { class: 'input', type: 'date', 'aria-label': t('setDue'), title: t('setDue'), value: qa.due, onChange: (e) => { qa.due = e.target.value; } }),
       h('select', { class: 'select', 'aria-label': t('assign'), onChange: (e) => { qa.assignee = e.target.value; } },
         h('option', { value: '' }, t('assign') + '…'),
         state.members.map(m => h('option', { value: m.id, selected: qa.assignee === m.id }, m.name)))
     ),
+    h('div', { class: 'qa-hint muted' }, t('quickAddHint')),
     h('div', { class: 'actions' },
       h('button', { class: 'btn', onClick: close }, t('cancel')),
-      h('button', { class: 'btn primary', onClick: create }, t('addTask')))
+      h('button', { class: 'btn primary', id: 'qaAddBtn', onClick: create }, t('addTask')))
   );
+  return box;
 }
 function renderAddBucketColumn() {
   if (ui.addingBucket) {
@@ -1389,6 +1901,39 @@ function labelPill(l, onRemove) {
 }
 function priorityIcon(p) { return h('span', { class: 'm pri-' + p, title: t('priority') + ': ' + t('pri_' + p) }, icon(p, 14), h('span', { class: 'sr-only' }, t('pri_' + p))); }
 
+/** Small subtask list used on cards (first CARD_SUBTASKS, "+n more"). */
+function renderCardSubtasks(task) {
+  const subs = task.checklist;
+  const mode = subtaskMode();
+  if (!subs.length || mode === 'never' || task.progress === 'completed') return null;
+  const doneN = subs.filter(c => c.done).length;
+  const pct = Math.round(doneN / subs.length * 100);
+  const pref = state.board.cardOpen[task.id];
+  const open = pref === undefined ? mode === 'always' : !!pref;
+  const all = !!(ui.cardAll && ui.cardAll[task.id]);
+  const toggle = h('button', {
+    class: 'sub-toggle no-open', 'aria-expanded': String(open), title: open ? t('collapseSubs') : t('expandSubs'), 'aria-label': (open ? t('collapseSubs') : t('expandSubs')) + ' (' + doneN + '/' + subs.length + ')',
+    onClick: () => { state.board.cardOpen[task.id] = !open; save(); renderMain(); }
+  }, h('span', { class: 'sub-bar', role: 'progressbar', 'aria-valuenow': pct, 'aria-valuemin': 0, 'aria-valuemax': 100 }, h('span', { style: { width: pct + '%' } })),
+  h('span', { class: 'sub-frac' }, doneN + '/' + subs.length), icon(open ? 'chevUp' : 'chevDown', 12));
+  const wrap = h('div', { class: 'card-subs' }, toggle);
+  if (!open) return wrap;
+  const shown = all ? subs : subs.slice(0, CARD_SUBTASKS);
+  wrap.appendChild(h('ul', { class: 'card-checklist' }, shown.map(c => h('li', { class: c.done ? 'done' : '' },
+    h('button', {
+      class: 'mini-check no-open', role: 'checkbox', 'aria-checked': String(c.done), 'aria-label': c.text,
+      onClick: () => { c.done = !c.done; touch(task); commit({ panel: true }); }
+    }, icon('check', 10)),
+    h('span', { class: 'cs-text' }, c.text),
+    c.due ? h('span', { class: 'cs-due' + (c.due < todayISO() && !c.done ? ' late' : '') }, fmtDayMonth(parseISO(c.due).getTime())) : null,
+    c.assignee && memberById(c.assignee) ? avatarEl(memberById(c.assignee), 'xs') : null))));
+  if (subs.length > CARD_SUBTASKS) {
+    wrap.appendChild(h('button', {
+      class: 'more-subs no-open', onClick: () => { ui.cardAll = ui.cardAll || {}; ui.cardAll[task.id] = !all; renderMain(); }
+    }, all ? t('showLess') : t('moreSubs', { n: subs.length - CARD_SUBTASKS })));
+  }
+  return wrap;
+}
 /** A single task card. */
 function renderCard(task, groupKey) {
   const done = task.progress === 'completed';
@@ -1396,14 +1941,16 @@ function renderCard(task, groupKey) {
   const labels = task.labels.map(labelById).filter(Boolean);
   const members = task.assignees.map(memberById).filter(Boolean);
   const clDone = task.checklist.filter(c => c.done).length;
+  const pb = PRIORITY_BORDER[task.priority];
   const card = h('div', {
-    class: 'card' + (done ? ' done' : ''), role: 'listitem', tabindex: 0, dataset: { id: task.id, group: groupKey },
-    'aria-label': task.title + (done ? ' — ' + t('prog_completed') : '') + (late ? ' — ' + t('late') : ''),
+    class: 'card' + (done ? ' done' : '') + (task.important ? ' starred' : '') + (pb ? ' pri-border' : ''), role: 'listitem', tabindex: 0, dataset: { id: task.id, group: groupKey },
+    style: pb ? { borderLeftColor: pb } : null,
+    'aria-label': task.title + (done ? ' — ' + t('prog_completed') : '') + (late ? ' — ' + t('late') : '') + (task.important ? ' — ' + t('importantTag') : ''),
     onClick: (e) => { if (e.target.closest('.no-open')) return; openPanel(task.id); },
     onKeydown: (e) => {
       if (e.target !== e.currentTarget) return;
       if (e.key === 'Enter') { e.preventDefault(); openPanel(task.id); }
-      if (e.key === ' ') { e.preventDefault(); toggleComplete(task); }
+      if (e.key === ' ') { e.preventDefault(); toggleComplete(task, e.currentTarget.querySelector('.check-circle')); }
       if (e.key === 'Delete') { e.preventDefault(); deleteTask(task); }
       if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) { e.preventDefault(); openTaskMenu(e.currentTarget, task); }
     },
@@ -1413,47 +1960,44 @@ function renderCard(task, groupKey) {
   card.appendChild(h('div', { class: 'card-title-row' },
     h('button', {
       class: 'check-circle no-open', role: 'checkbox', 'aria-checked': String(done), 'aria-label': t('completeTask') + ': ' + task.title,
-      title: done ? t('markIncomplete') : t('markComplete'), onClick: () => toggleComplete(task)
+      title: done ? t('markIncomplete') : t('markComplete'), onClick: (e) => toggleComplete(task, e.currentTarget)
     }, icon('check', 12)),
     h('span', { class: 'card-title' }, task.title || '—'),
-    h('button', {
-      class: 'icon-btn sm card-more no-open', 'aria-label': t('taskOptions'), 'aria-haspopup': 'menu',
-      onClick: (e) => openTaskMenu(e.currentTarget, task)
-    }, icon('more'))
-  ));
-  if (task.showChecklist && task.checklist.length && !done) {
-    card.appendChild(h('ul', { class: 'card-checklist' }, task.checklist.map(c => h('li', { class: c.done ? 'done' : '' },
+    h('span', { class: 'card-actions' },
       h('button', {
-        class: 'mini-check no-open', role: 'checkbox', 'aria-checked': String(c.done), 'aria-label': c.text,
-        onClick: () => { c.done = !c.done; touch(task); commit({ panel: true }); }
-      }, icon('check', 10)),
-      h('span', null, c.text)))));
-  }
-  // Meta row: progress, due date, checklist, notes, attachments, comments, priority, repeat
+        class: 'icon-btn sm card-more no-open', 'aria-label': t('taskOptions'), 'aria-haspopup': 'menu',
+        onClick: (e) => openTaskMenu(e.currentTarget, task)
+      }, icon('more')),
+      h('button', {
+        class: 'icon-btn sm star-btn no-open' + (task.important ? ' on' : ''), 'aria-pressed': String(!!task.important),
+        'aria-label': task.important ? t('unstar') : t('star'), title: task.important ? t('unstar') : t('star'), onClick: () => toggleImportant(task)
+      }, icon(task.important ? 'starFilled' : 'star', 15)))
+  ));
+  const subsEl = renderCardSubtasks(task);
+  if (subsEl) card.appendChild(subsEl);
+  // Footer: due chip · subtasks · comments · attachments · created (left), assignees (right)
   const meta = h('div', { class: 'card-meta' });
-  meta.appendChild(h('span', { class: 'm prog-icon ' + task.progress, title: t('progress') + ': ' + t('prog_' + task.progress) },
-    icon(progressIconName(task.progress), 14), h('span', { class: 'sr-only' }, t('prog_' + task.progress))));
+  if (task.progress === 'inprogress') meta.appendChild(h('span', { class: 'm prog-icon inprogress', title: t('progress') + ': ' + t('prog_inprogress') }, icon('half', 14), h('span', { class: 'sr-only' }, t('prog_inprogress'))));
   if (done && task.completedAt) {
-    meta.appendChild(h('span', { class: 'm completed-info' }, t('completedOn', { when: new Date(task.completedAt).toLocaleDateString(locale(), { month: 'numeric', day: 'numeric' }) })));
+    meta.appendChild(h('span', { class: 'm completed-info', title: fmtFull(task.completedAt) }, icon('done', 13), t('completedOn', { when: fmtDayMonth(task.completedAt) })));
   } else if (task.due) {
-    const dg = dueGroup(task.due);
-    meta.appendChild(h('span', { class: 'm due-chip' + (late ? ' late' : dg === 'today' ? ' today' : ''), title: t('dueOn', { date: fmtLong(task.due) }) },
-      icon('calendar', 13), fmtShort(task.due)));
+    meta.appendChild(dueChip(task.due));
   }
-  if (task.checklist.length) meta.appendChild(h('span', { class: 'm', title: t('checklistCount', { a: clDone, b: task.checklist.length }) }, icon('checklist', 14), clDone + '/' + task.checklist.length));
-  if (task.notes && !(task.showChecklist && task.checklist.length)) meta.appendChild(h('span', { class: 'm', title: t('notes_short') }, icon('notes', 14)));
-  if (task.attachments.length) meta.appendChild(h('span', { class: 'm', title: t('attachmentsCount', { n: task.attachments.length }) }, icon('clip', 14), String(task.attachments.length)));
+  if (task.checklist.length) meta.appendChild(h('span', { class: 'm' + (clDone === task.checklist.length ? ' all-done' : ''), title: t('checklistCount', { a: clDone, b: task.checklist.length }) }, icon('checklist', 14), clDone + '/' + task.checklist.length));
   if (task.comments.length) meta.appendChild(h('span', { class: 'm', title: t('commentsCount', { n: task.comments.length }) }, icon('comment', 14), String(task.comments.length)));
-  if (task.priority !== 'medium') meta.appendChild(priorityIcon(task.priority));
+  if (task.attachments.length) meta.appendChild(h('span', { class: 'm', title: t('attachmentsCount', { n: task.attachments.length }) }, icon('clip', 14), String(task.attachments.length)));
+  if (task.notes) meta.appendChild(h('span', { class: 'm', title: t('notes_short') }, icon('notes', 14)));
   if (task.repeat !== 'none') meta.appendChild(h('span', { class: 'm', title: t('repeats') + ': ' + t('rep_' + task.repeat) }, icon('repeat', 14)));
-  card.appendChild(meta);
-  // Footer: assignees + assign icon
-  card.appendChild(h('div', { class: 'card-footer' },
-    h('div', { class: 'avatars' }, members.slice(0, 4).map(m => avatarEl(m)), members.length > 4 ? h('span', { class: 'avatar', style: { background: '#555' } }, '+' + (members.length - 4)) : null),
-    h('button', {
-      class: 'icon-btn sm no-open', 'aria-label': t('assign'), title: t('assign'), 'aria-haspopup': 'menu',
-      onClick: (e) => openMemberPicker(e.currentTarget, task)
-    }, icon('personAdd'))
+  if (inMyDay(task)) meta.appendChild(h('span', { class: 'm myday-ic', title: t('inMyDay') }, icon('sun', 13)));
+  if (task.priority !== 'medium') meta.appendChild(h('span', { class: 'sr-only' }, t('priority') + ': ' + t('pri_' + task.priority)));
+  meta.appendChild(h('span', { class: 'm created-at', title: createdTooltip(task) }, t('createdShort', { date: fmtDayMonth(task.created) })));
+  card.appendChild(h('div', { class: 'card-footer' }, meta,
+    h('div', { class: 'card-people' },
+      h('div', { class: 'avatars' }, members.slice(0, 3).map(m => avatarEl(m)), members.length > 3 ? h('span', { class: 'avatar', style: { background: '#555' } }, '+' + (members.length - 3)) : null),
+      h('button', {
+        class: 'icon-btn sm no-open assign-btn', 'aria-label': t('assign'), title: t('assign'), 'aria-haspopup': 'menu',
+        onClick: (e) => openMemberPicker(e.currentTarget, task)
+      }, icon('personAdd')))
   ));
   return card;
 }
@@ -1466,7 +2010,7 @@ function initBoardSortables(board) {
   }
   board.querySelectorAll('.task-list').forEach(list => {
     ui.sortables.push(Sortable.create(list, {
-      group: 'tasks', animation: 180, easing: 'cubic-bezier(.2,.8,.2,1)',
+      group: 'tasks', animation: 200, easing: 'cubic-bezier(.2,.8,.2,1)',
       ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen', dragClass: 'sortable-drag',
       delay: 120, delayOnTouchOnly: true, fallbackTolerance: 4, filter: '.no-open', preventOnFilter: false,
       scroll: true, bubbleScroll: true,
@@ -1505,7 +2049,8 @@ function onCardDrop(evt) {
 /* ============================ RENDER — GRID ============================ */
 const GRID_COLS = [
   { key: 'title', label: 'title' }, { key: 'bucket', label: 'bucket' }, { key: 'progress', label: 'progress' }, { key: 'priority', label: 'priority' },
-  { key: 'assignees', label: 'assignees' }, { key: 'start', label: 'startDate' }, { key: 'due', label: 'dueDate' }, { key: 'labels', label: 'labels' }
+  { key: 'assignees', label: 'assignees' }, { key: 'start', label: 'startDate' }, { key: 'due', label: 'dueDate' }, { key: 'labels', label: 'labels' },
+  { key: 'created', label: 'createdCol' }
 ];
 function gridSortValue(task, key) {
   switch (key) {
@@ -1517,6 +2062,7 @@ function gridSortValue(task, key) {
     case 'start': return task.start || '\uffff';
     case 'due': return task.due || '\uffff';
     case 'labels': { const l = labelById(task.labels.find(labelById)); return l ? l.name.toLowerCase() : '\uffff'; }
+    case 'created': return task.created || 0;
     default: return state.buckets.findIndex(b => b.id === task.bucketId) * 1e6 + task.order;
   }
 }
@@ -1551,7 +2097,9 @@ function renderGridRow(task) {
   const upd = (fn) => { fn(); touch(task); commit({ panel: true }); };
   return h('tr', { class: done ? 'done' : '', dataset: { id: task.id }, onContextmenu: (e) => { if (e.target.closest('input,select')) return; e.preventDefault(); openTaskMenu({ x: e.clientX, y: e.clientY }, task); } },
     h('td', null, h('button', { class: 'check-circle', role: 'checkbox', 'aria-checked': String(done), 'aria-label': t('completeTask') + ': ' + task.title, onClick: () => toggleComplete(task) }, icon('check', 12))),
-    h('td', { style: { minWidth: '240px' } }, h('input', { class: 'cell-input', value: task.title, 'aria-label': t('title'), onChange: (e) => { const v = e.target.value.trim(); if (v) upd(() => { task.title = v; }); else e.target.value = task.title; } })),
+    h('td', { style: { minWidth: '240px' } }, h('span', { class: 'cell-title' },
+      h('input', { class: 'cell-input', value: task.title, 'aria-label': t('title'), onChange: (e) => { const v = e.target.value.trim(); if (v) upd(() => { task.title = v; }); else e.target.value = task.title; } }),
+      h('button', { class: 'icon-btn sm star-btn' + (task.important ? ' on' : ''), 'aria-pressed': String(!!task.important), 'aria-label': task.important ? t('unstar') : t('star'), title: task.important ? t('unstar') : t('star'), onClick: () => toggleImportant(task) }, icon(task.important ? 'starFilled' : 'star', 14)))),
     h('td', null, gridSelect(task.bucketId, state.buckets.map(b => ({ value: b.id, label: b.name })), (v) => upd(() => { task.bucketId = v; }), t('bucket'))),
     h('td', null, gridSelect(task.progress, PROGRESS.map(p => ({ value: p, label: t('prog_' + p) })), (v) => upd(() => { if (v === 'completed') setCompleted(task, true); else { if (done) setCompleted(task, false); task.progress = v; } }), t('progress'))),
     h('td', null, gridSelect(task.priority, PRIORITY.map(p => ({ value: p, label: t('pri_' + p) })), (v) => upd(() => { task.priority = v; }), t('priority'))),
@@ -1561,6 +2109,7 @@ function renderGridRow(task) {
     h('td', null, h('input', { class: 'cell-input' + (isLate(task) ? ' cell-late' : ''), type: 'date', value: task.due || '', 'aria-label': t('dueDate'), onChange: (e) => upd(() => { task.due = e.target.value || null; }) })),
     h('td', { style: { minWidth: '160px' } }, h('button', { class: 'cell-btn', 'aria-label': t('labels'), onClick: (e) => openLabelPicker(e.currentTarget, task) },
       task.labels.map(labelById).filter(Boolean).length ? task.labels.map(labelById).filter(Boolean).map(l => labelPill(l)) : h('span', { class: 'muted' }, icon('tag')))),
+    h('td', { class: 'cell-created', title: createdTooltip(task) }, fmtDayMonth(task.created)),
     h('td', null, h('span', { style: { display: 'flex', gap: '2px' } },
       h('button', { class: 'icon-btn sm', 'aria-label': t('open') + ': ' + task.title, title: t('open'), onClick: () => openPanel(task.id) }, icon('edit', 14)),
       h('button', { class: 'icon-btn sm', 'aria-label': t('taskOptions'), 'aria-haspopup': 'menu', onClick: (e) => openTaskMenu(e.currentTarget, task) }, icon('more'))))
@@ -1569,7 +2118,7 @@ function renderGridRow(task) {
 function renderGridAddRow() {
   return h('tr', null,
     h('td', null, h('span', { class: 'muted' }, icon('plus'))),
-    h('td', { colspan: 9 }, h('input', {
+    h('td', { colspan: 10 }, h('input', {
       class: 'cell-input', id: 'gridAddInput', placeholder: t('addTask') + '…', 'aria-label': t('addTask'),
       onKeydown: (e) => {
         if (e.key === 'Enter' && e.target.value.trim()) { createTask({ title: e.target.value.trim() }); ui.focusGridAdd = true; commit(); toast(t('taskAdded')); }
@@ -1724,8 +2273,85 @@ function renderCharts(main) {
   }));
 }
 
+/* ===================== RENDER — SMART LISTS (To Do style) ===================== */
+function renderSmartList(main) {
+  const k = state.board.sideList;
+  const base = smartListTasks(k, visibleTasks());
+  const due = (x) => x.due || '\uffff';
+  let active, completed;
+  if (k === 'completed') { active = []; completed = base.slice().sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0)); }
+  else {
+    active = base.filter(x => x.progress !== 'completed');
+    completed = base.filter(x => x.progress === 'completed').sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
+    active.sort(k === 'planned' ? (a, b) => due(a) < due(b) ? -1 : due(a) > due(b) ? 1 : byStarOrder(a, b)
+      : (a, b) => ((b.important ? 1 : 0) - (a.important ? 1 : 0)) || (due(a) < due(b) ? -1 : due(a) > due(b) ? 1 : 0) || (b.created - a.created));
+  }
+  const head = h('div', { class: 'list-head' },
+    h('span', { class: 'list-ic sl-' + k }, icon(SMART_ICONS[k], 22)),
+    h('div', null, h('h1', null, t('sl_' + k)),
+      k === 'myday' ? h('div', { class: 'muted' }, new Date().toLocaleDateString(state.board.lang === 'de' ? 'de-DE' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) : null));
+  const wrap = h('div', { class: 'list-wrap' }, head);
+  if (k !== 'completed') {
+    const bucketSel = h('select', { class: 'select list-bucket', 'aria-label': t('bucket') }, state.buckets.map(b => h('option', { value: b.id }, b.name)));
+    const input = h('input', {
+      class: 'input', id: 'listAddInput', placeholder: t('addTask'), 'aria-label': t('addTask'), maxlength: 255,
+      onKeydown: (e) => {
+        if (e.key !== 'Enter' || !e.target.value.trim()) return;
+        e.preventDefault();
+        const me = currentUser();
+        const extra = k === 'important' ? { important: true } : k === 'planned' ? { due: todayISO() } : k === 'assigned' && me ? { assignees: [me.id] } : {};
+        const task = createTask(Object.assign({ title: e.target.value.trim(), bucketId: bucketSel.value || state.buckets[0].id }, extra));
+        if (k === 'myday') setMyDay(task, true, true);
+        e.target.value = ''; commit(); toast(t('taskAdded'));
+        const i = document.getElementById('listAddInput'); if (i) i.focus();
+      }
+    });
+    wrap.appendChild(h('div', { class: 'list-add' }, h('span', { class: 'list-add-ic' }, icon('plus', 16)), input, bucketSel));
+  }
+  const rows = h('ul', { class: 'list-rows', role: 'list', 'aria-label': t('sl_' + k) }, (k === 'completed' ? completed : active).map(renderListRow));
+  wrap.appendChild(rows);
+  if (!(k === 'completed' ? completed : active).length) {
+    wrap.appendChild(h('div', { class: 'empty-state list-empty' }, h('span', { class: 'empty-ic big' }, icon(SMART_ICONS[k], 34)),
+      h('p', null, (ui.search || activeFilterCount()) ? t('nothingFound') : t('sle_' + k))));
+  }
+  if (k !== 'completed' && completed.length) {
+    const openKey = 'list:' + k;
+    const open = !!state.board.completedOpen[openKey];
+    wrap.appendChild(h('button', { class: 'completed-toggle', 'aria-expanded': String(open), onClick: () => { state.board.completedOpen[openKey] = !open; save(); renderMain(); } },
+      icon('chevRight', 14, 'chev'), t('completedTasks'), h('span', { class: 'col-count count-badge' }, String(completed.length))));
+    if (open) wrap.appendChild(h('ul', { class: 'list-rows done-rows', role: 'list' }, completed.map(renderListRow)));
+  }
+  main.appendChild(wrap);
+}
+function renderListRow(task) {
+  const done = task.progress === 'completed';
+  const b = bucketById(task.bucketId);
+  const subs = task.checklist, sd = subs.filter(c => c.done).length;
+  const members = task.assignees.map(memberById).filter(Boolean);
+  const pb = PRIORITY_BORDER[task.priority];
+  return h('li', {
+    class: 'list-row' + (done ? ' done' : ''), tabindex: 0, dataset: { id: task.id }, style: pb ? { boxShadow: 'inset 3px 0 0 ' + pb } : null,
+    'aria-label': task.title + (done ? ' — ' + t('prog_completed') : ''),
+    onClick: (e) => { if (e.target.closest('.no-open')) return; openPanel(task.id); },
+    onKeydown: (e) => { if (e.target !== e.currentTarget) return; if (e.key === 'Enter') openPanel(task.id); if (e.key === ' ') { e.preventDefault(); toggleComplete(task, e.currentTarget.querySelector('.check-circle')); } },
+    onContextmenu: (e) => { e.preventDefault(); openTaskMenu({ x: e.clientX, y: e.clientY }, task); }
+  },
+    h('button', { class: 'check-circle no-open', role: 'checkbox', 'aria-checked': String(done), 'aria-label': t('completeTask') + ': ' + task.title, onClick: (e) => toggleComplete(task, e.currentTarget) }, icon('check', 12)),
+    h('div', { class: 'lr-main' },
+      h('div', { class: 'lr-title' }, task.title || '—'),
+      h('div', { class: 'lr-meta' },
+        b ? h('span', { class: 'm' }, b.color ? h('span', { class: 'dot', style: { background: b.color } }) : null, b.name) : null,
+        inMyDay(task) && state.board.sideList !== 'myday' ? h('span', { class: 'm myday-ic' }, icon('sun', 12), t('inMyDay')) : null,
+        !done && task.due ? dueChip(task.due) : null,
+        subs.length ? h('span', { class: 'm' }, icon('checklist', 13), sd + '/' + subs.length) : null,
+        task.comments.length ? h('span', { class: 'm' }, icon('comment', 13), String(task.comments.length)) : null,
+        h('span', { class: 'm created-at', title: createdTooltip(task) }, t('createdShort', { date: fmtDayMonth(task.created) })))),
+    h('div', { class: 'avatars' }, members.slice(0, 3).map(m => avatarEl(m))),
+    h('button', { class: 'icon-btn sm star-btn no-open' + (task.important ? ' on' : ''), 'aria-pressed': String(!!task.important), 'aria-label': task.important ? t('unstar') : t('star'), title: task.important ? t('unstar') : t('star'), onClick: () => toggleImportant(task) }, icon(task.important ? 'starFilled' : 'star', 16)));
+}
+
 /* ========================= 9. TASK DETAIL PANEL ========================= */
-function openPanel(id) {
+function openPanel(id, focusId) {
   const task = taskById(id);
   if (!task) return;
   closeMenu();
@@ -1736,7 +2362,9 @@ function openPanel(id) {
   const p = document.getElementById('panel');
   p.classList.add('open');
   try { history.replaceState(null, '', '#task=' + id); } catch (e) { /* file:// or sandbox */ }
-  setTimeout(() => { const ti = document.getElementById('panelTitle'); if (ti) ti.focus({ preventScroll: true }); }, 30);
+  const f = document.getElementById(focusId || 'panelTitle');
+  if (f) { f.focus({ preventScroll: !focusId }); if (focusId) f.scrollIntoView({ block: 'center' }); }
+  setTimeout(() => { const el = document.getElementById(focusId || 'panelTitle'); if (el && document.activeElement !== el && !(p.contains(document.activeElement) && document.activeElement !== document.body && document.activeElement.id !== 'panelTitle')) el.focus({ preventScroll: true }); }, 30);
 }
 function closePanel() {
   const p = document.getElementById('panel');
@@ -1774,7 +2402,18 @@ function renderPanel() {
       class: 'input panel-title', id: 'panelTitle', value: task.title, 'aria-label': t('title'), maxlength: 255,
       onInput: (e) => { if (e.target.value.trim()) { task.title = e.target.value; touch(task); save(); } },
       onChange: (e) => { if (!e.target.value.trim()) e.target.value = task.title; renderMain(); updateMetaInfo(); }
-    })));
+    }),
+    h('button', {
+      class: 'icon-btn star-btn' + (task.important ? ' on' : ''), id: 'pfStar', 'aria-pressed': String(!!task.important),
+      'aria-label': task.important ? t('unstar') : t('star'), title: task.important ? t('unstar') : t('star'), onClick: () => toggleImportant(task)
+    }, icon(task.important ? 'starFilled' : 'star', 18))));
+  // Created by … / Last modified by … (real created_at / created_by / updated_at / updated_by)
+  body.appendChild(h('div', { class: 'panel-stamps', id: 'panelStamps' }));
+  // My Day (personal)
+  const mine = inMyDay(task);
+  body.appendChild(h('div', { class: 'panel-quick' },
+    h('button', { class: 'pill-btn' + (mine ? ' on' : ''), id: 'pfMyDay', 'aria-pressed': String(mine), onClick: () => setMyDay(task, !mine) },
+      icon('sun', 14), mine ? t('removeMyDay') : t('addMyDay'))));
   // Assignees
   const members = task.assignees.map(memberById).filter(Boolean);
   body.appendChild(h('div', null,
@@ -1824,10 +2463,20 @@ function renderPanel() {
   if (focusId) { const f = document.getElementById(focusId); if (f) f.focus({ preventScroll: true }); }
   initChecklistSortable(task);
 }
+function updateStamps(task) {
+  const el = document.getElementById('panelStamps');
+  if (!el) return;
+  const mod = modifierInfo(task);
+  el.textContent = '';
+  el.append(
+    h('span', { title: fmtFull(task.created) }, t('createdHead', { who: creatorName(task), when: fmtFull(task.created) })),
+    h('span', { title: fmtFull(mod.when) }, mod.who ? t('modifiedHead', { who: mod.who, when: fmtFull(mod.when) }) : t('modifiedHeadNoWho', { when: fmtFull(mod.when) })));
+}
 function updateMetaInfo() {
   const el = document.getElementById('panelMeta');
   const task = taskById(ui.openTaskId);
   if (!el || !task) return;
+  updateStamps(task);
   const creator = memberById(task.createdBy);
   el.textContent = '';
   el.append(
@@ -1837,24 +2486,23 @@ function updateMetaInfo() {
     lastEditedEl(task)
   );
 }
+/** Subtasks (Microsoft To Do "Steps"): add, tick, rename inline, drag to reorder, due date, assignee, promote, delete. */
 function renderChecklistSection(task, set) {
   const doneCount = task.checklist.filter(c => c.done).length;
   const pct = task.checklist.length ? Math.round(doneCount / task.checklist.length * 100) : 0;
-  const addItem = (input) => {
-    const v = input.value.trim(); if (!v) return;
-    task.checklist.push({ id: uid('c'), text: v, done: false });
+  const addLines = (lines) => {
+    lines.forEach(v => task.checklist.push({ id: uid('c'), text: v, done: false }));
     set(() => { }, true);
     const ni = document.getElementById('pfChecklistAdd'); if (ni) ni.focus();
   };
-  return h('div', null,
-    h('div', { class: 'section-title' }, icon('checklist', 14), t('checklist') + ' ' + doneCount + ' / ' + task.checklist.length, h('span', { class: 'grow' }),
-      h('label', { class: 'toggle' }, h('input', { type: 'checkbox', id: 'pfShowOnCard', checked: task.showChecklist, onChange: (e) => set(() => { task.showChecklist = e.target.checked; }) }), t('showOnCard'))),
-    task.checklist.length ? h('div', { class: 'check-progress', role: 'progressbar', 'aria-valuenow': pct, 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': t('checklist') }, h('div', { style: { width: pct + '%' } })) : null,
-    h('ul', { class: 'checklist', id: 'pfChecklist' }, task.checklist.map((c, idx) => h('li', { class: c.done ? 'done' : '', dataset: { id: c.id } },
+  const addItem = (input) => { const v = input.value.trim(); if (!v) return; addLines([v]); };
+  const row = (c, idx) => {
+    const a = c.assignee ? memberById(c.assignee) : null;
+    return h('li', { class: 'sub-row' + (c.done ? ' done' : ''), dataset: { id: c.id } },
       h('span', { class: 'drag-handle', title: t('dragToReorder'), 'aria-hidden': 'true' }, icon('drag', 14)),
       h('button', { class: 'mini-check', role: 'checkbox', 'aria-checked': String(c.done), 'aria-label': c.text, id: 'pfcl-chk-' + c.id, onClick: () => set(() => { c.done = !c.done; }, true) }, icon('check', 10)),
       h('input', {
-        class: 'input', id: 'pfcl-' + c.id, value: c.text, 'aria-label': t('checklist') + ' ' + (idx + 1),
+        class: 'input', id: 'pfcl-' + c.id, value: c.text, 'aria-label': t('subtaskN', { n: idx + 1 }),
         onInput: (e) => { c.text = e.target.value; touch(task); save(); },
         onChange: (e) => { if (!e.target.value.trim()) { task.checklist = task.checklist.filter(x => x.id !== c.id); set(() => { }, true); } else renderMain(); },
         onKeydown: (e) => {
@@ -1865,12 +2513,53 @@ function renderChecklistSection(task, set) {
           }
         }
       }),
-      h('button', { class: 'icon-btn sm', 'aria-label': t('removeItem') + ': ' + c.text, title: t('removeItem'), onClick: () => set(() => { task.checklist = task.checklist.filter(x => x.id !== c.id); }, true) }, icon('trash', 14))
-    ))),
-    h('div', { class: 'add-row' },
-      h('input', { class: 'input', id: 'pfChecklistAdd', placeholder: t('addItem'), 'aria-label': t('addItem'), maxlength: 200, onKeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(e.target); } } }),
-      h('button', { class: 'btn', onClick: (e) => addItem(e.currentTarget.previousSibling) }, icon('plus'), t('add')))
+      c.due ? h('button', { class: 'sub-chip due-chip ' + (c.done ? '' : dueInfo(c.due).cls), title: t('subDue'), onClick: (e) => openSubtaskDue(e.currentTarget, task, c, set) }, icon('calendar', 12), dueInfo(c.due).text) : null,
+      a ? h('button', { class: 'sub-chip person', title: t('subAssign') + ': ' + a.name, 'aria-label': t('subAssign') + ': ' + a.name, onClick: (e) => openSubtaskAssignee(e.currentTarget, task, c, set) }, avatarEl(a, 'xs')) : null,
+      h('span', { class: 'sub-actions' },
+        c.due ? null : h('button', { class: 'icon-btn sm sub-due-btn', 'aria-label': t('subDue'), title: t('subDue'), onClick: (e) => openSubtaskDue(e.currentTarget, task, c, set) }, icon('calendar', 14)),
+        a ? null : h('button', { class: 'icon-btn sm sub-assign-btn', 'aria-label': t('subAssign'), title: t('subAssign'), onClick: (e) => openSubtaskAssignee(e.currentTarget, task, c, set) }, icon('person', 14)),
+        h('button', { class: 'icon-btn sm sub-promote-btn', 'aria-label': t('promote') + ': ' + c.text, title: t('promote'), onClick: () => promoteSubtask(task, c) }, icon('promote', 14)),
+        h('button', { class: 'icon-btn sm', 'aria-label': t('removeItem') + ': ' + c.text, title: t('removeItem'), onClick: () => set(() => { task.checklist = task.checklist.filter(x => x.id !== c.id); }, true) }, icon('trash', 14))));
+  };
+  return h('div', { class: 'subtasks-section' },
+    h('div', { class: 'section-title' }, icon('checklist', 14), t('subtasks') + ' ' + doneCount + ' / ' + task.checklist.length),
+    task.checklist.length ? h('div', { class: 'check-progress', role: 'progressbar', 'aria-valuenow': pct, 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': t('subtasks') }, h('div', { style: { width: pct + '%' } })) : null,
+    h('ul', { class: 'checklist', id: 'pfChecklist' }, task.checklist.map(row)),
+    h('div', { class: 'add-row sub-add' },
+      h('span', { class: 'sub-add-ic', 'aria-hidden': 'true' }, icon('plus', 14)),
+      h('input', {
+        class: 'input', id: 'pfChecklistAdd', placeholder: t('addItem'), 'aria-label': t('addItem'), maxlength: 200,
+        onKeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(e.target); } },
+        onPaste: (e) => { const lines = pastedLines((e.clipboardData || window.clipboardData).getData('text')); if (lines.length < 2) return; e.preventDefault(); addLines(lines); }
+      }),
+      h('button', { class: 'btn', onClick: (e) => addItem(document.getElementById('pfChecklistAdd')) }, t('add')))
   );
+}
+function openSubtaskDue(anchor, task, c, set) {
+  const input = h('input', { class: 'input', type: 'date', id: 'subDueInput', value: c.due || '', 'aria-label': t('subDue'),
+    onChange: (e) => { const v = e.target.value; closeMenu(); set(() => { if (isValidISO(v)) c.due = v; else delete c.due; }, true); } });
+  openMenu(anchor, [{ head: t('subDue') + ': ' + c.text }, { node: h('div', { class: 'menu-pad' }, input) },
+    c.due ? { label: t('clearDate'), icon: 'close', onClick: () => set(() => { delete c.due; }, true) } : null].filter(Boolean), { label: t('subDue') });
+}
+function openSubtaskAssignee(anchor, task, c, set) {
+  openMenu(anchor, [{ head: t('subAssign') + ': ' + c.text }].concat(state.members.map(m => ({
+    label: m.name, avatar: avatarEl(m), checked: c.assignee === m.id, onClick: () => set(() => { c.assignee = m.id; }, true)
+  })), c.assignee ? ['-', { label: t('unassignSub'), icon: 'close', onClick: () => set(() => { delete c.assignee; }, true) }] : []), { label: t('subAssign') });
+}
+/** Turn a subtask into its own task in the same bucket (keeps its text, done state, due date and assignee). */
+function promoteSubtask(task, c) {
+  const nt = createTask({
+    title: c.text || t('newTask'), bucketId: task.bucketId, due: c.due || null,
+    assignees: c.assignee && memberById(c.assignee) ? [c.assignee] : [],
+    progress: c.done ? 'completed' : 'notstarted', completedAt: c.done ? Date.now() : null, completedBy: c.done ? (currentUser() || {}).id || null : null
+  });
+  nt.order = task.order + 0.5;
+  task.checklist = task.checklist.filter(x => x.id !== c.id); touch(task);
+  commit({ panel: true });
+  toast(t('promoted'), t('openTask'), () => openPanel(nt.id), 5000);
+}
+function focusSubtaskInput(task) {
+  openPanel(task.id, 'pfChecklistAdd');
 }
 function initChecklistSortable(task) {
   const list = document.getElementById('pfChecklist');
@@ -1993,8 +2682,11 @@ function openTaskMenu(anchor, task, fromPanel) {
   const done = task.progress === 'completed';
   openMenu(anchor, [
     fromPanel ? null : { label: t('edit'), icon: 'edit', onClick: () => openPanel(task.id) },
-    { label: t('duplicate'), icon: 'copy', onClick: () => duplicateTask(task) },
+    { label: inMyDay(task) ? t('removeMyDay') : t('addMyDay'), icon: 'sun', onClick: () => setMyDay(task, !inMyDay(task)) },
+    { label: task.important ? t('unstar') : t('star'), icon: task.important ? 'starFilled' : 'star', onClick: () => toggleImportant(task) },
+    { label: t('addSubtask'), icon: 'checklist', onClick: () => focusSubtaskInput(task) },
     { label: t('moveTo'), icon: 'move', submenu: true, keepOpen: true, onClick: () => openMoveMenu(anchor, task) },
+    { label: t('duplicate'), icon: 'copy', onClick: () => duplicateTask(task) },
     { label: t('copyLink'), icon: 'link', onClick: () => { copyText(taskLink(task)); toast(t('linkCopied')); } },
     { label: done ? t('markIncomplete') : t('markComplete'), icon: done ? 'circle' : 'done', onClick: () => toggleComplete(task) },
     '-',
@@ -2049,7 +2741,7 @@ function openColumnMenu(anchor, g) {
     items.push({ label: t('rename'), icon: 'edit', onClick: () => { ui.renamingBucket = g.bucket.id; renderMain(); } });
     items.push({ label: t('color'), icon: 'palette', submenu: true, keepOpen: true, onClick: () => openBucketColorMenu(anchor, g.bucket) });
   }
-  items.push({ label: t('addTask'), icon: 'plus', onClick: () => { ui.quickAdd = { group: g.key, title: '', due: '', assignee: '' }; ui.focusQuickAdd = true; renderMain(); } });
+  items.push({ label: t('addTask'), icon: 'plus', onClick: () => openQuickAdd(g.key) });
   items.push({ label: t('collapse'), icon: 'collapse', onClick: () => setGroupCollapsed(g, true) });
   if (g.bucket) { items.push('-'); items.push({ label: t('delete'), icon: 'trash', danger: true, onClick: () => confirmDeleteBucket(g.bucket) }); }
   openMenu(anchor, items, { label: t('bucketOptions') });
@@ -2251,7 +2943,13 @@ function openSettings(tab) {
               [[0, 'sunday'], [1, 'monday'], [6, 'saturday']].map(([v, k]) => h('option', { value: String(v), selected: Number(state.board.weekStart) === v }, t(k))))),
           h('label', null, h('span', { class: 'field-label' }, t('currentUser')),
             h('select', { class: 'select', id: 'setUser', onChange: (e) => { state.board.currentUserId = e.target.value; refreshAll(); } },
-              state.members.map(mb => h('option', { value: mb.id, selected: state.board.currentUserId === mb.id }, mb.name))))
+              state.members.map(mb => h('option', { value: mb.id, selected: state.board.currentUserId === mb.id }, mb.name)))),
+          h('label', null, h('span', { class: 'field-label' }, t('showSubtasks')),
+            h('select', { class: 'select', id: 'setSubtaskMode', onChange: (e) => { state.settings = Object.assign({}, state.settings, { showSubtasks: e.target.value }); refreshAll(); } },
+              SUBTASK_MODES.map(v => h('option', { value: v, selected: subtaskMode() === v }, t('ss_' + v))))),
+          h('label', null, h('span', { class: 'field-label' }, t('density')),
+            h('select', { class: 'select', id: 'setDensity', onChange: (e) => { state.board.density = e.target.value; refreshAll(); } },
+              ['comfortable', 'compact'].map(v => h('option', { value: v, selected: (state.board.density || 'comfortable') === v }, t(v)))))
         ));
     } else if (current === 'members') {
       state.members.forEach(mb => {
@@ -2379,11 +3077,12 @@ function isTyping(el) {
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
 }
 function startNewTask() {
+  if (state.board.sideList) { const i = document.getElementById('listAddInput'); if (i) { i.focus(); return; } }
   if (state.board.view !== 'board' && state.board.view !== 'grid') { state.board.view = 'board'; save(); renderTopbar(); }
   if (state.board.view === 'grid') { ui.focusGridAdd = true; renderMain(); return; }
   const g = getGroups().find(x => !isGroupCollapsed(x)) || getGroups()[0];
   if (!g) return;
-  ui.quickAdd = { group: g.key, title: '', due: '', assignee: '' }; ui.focusQuickAdd = true; renderMain();
+  openQuickAdd(g.key);
 }
 document.addEventListener('keydown', (e) => {
   const typing = isTyping(e.target);
@@ -2411,12 +3110,14 @@ window.addEventListener('storage', (e) => { // keep multiple tabs in sync (local
 });
 // Re-evaluate "Late"/"Today" when the day changes while the app is open
 let lastDay = todayISO();
-setInterval(() => { if (todayISO() !== lastDay) { lastDay = todayISO(); renderMain(); } }, 60000);
+setInterval(() => { if (todayISO() !== lastDay) { lastDay = todayISO(); rollMyDay(); if (typeof cloudReloadMyDay === 'function') cloudReloadMyDay(); renderMain(); } }, 60000);
+window.addEventListener('resize', debounce(() => { if (!isMobile() && ui.sidebarMobile) { ui.sidebarMobile = false; renderSidebar(); } }, 150));
 
 /** Local-only start (no Supabase): the original single-browser behaviour. */
 function init() {
   appMode = 'local';
   state = loadState();
+  loadMyDayLocal();
   applyTheme();
   renderTopbar();
   renderMain();
@@ -2437,7 +3138,9 @@ const MODE_KEY = 'bst-planner-mode';          // 'local' when the user chose "us
 const PREFS_KEY = 'bst-planner-prefs';        // per-person view preferences (theme, language, view …)
 const CACHE_KEY = 'bst-planner-cloud-v1';     // offline cache: board, server rows, pending changes
 const IMPORTED_KEY = 'bst-planner-v2-imported';
-const PREF_FIELDS = ['theme', 'lang', 'weekStart', 'view', 'groupBy', 'calMode', 'currentUserId', 'completedOpen', 'collapsedGroups'];
+const PREF_FIELDS = ['theme', 'lang', 'weekStart', 'view', 'groupBy', 'calMode', 'currentUserId', 'completedOpen', 'collapsedGroups', 'sidebar', 'density', 'sideList', 'cardOpen'];
+const CACHE_VERSION = 3;                      // bump when the canonical row shape changes (shadow is then rebuilt from rows)
+const STARS_KEY = 'bst-planner-stars';        // stars kept in this browser while the database has no is_important column
 const SYNC_TABLES = ['boards', 'buckets', 'labels', 'tasks', 'comments'];
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const META_COLS = 'id,created_at,updated_at,created_by,updated_by';
@@ -2545,7 +3248,10 @@ const cloud = {
   shadow: emptyMaps(),      // canonical JSON of what the server has or will have once the queue is sent
   queue: [], seq: 0,        // pending changes: { tb, op: 'upsert'|'delete', id, row, at, v }
   offset: 0, netDown: false, flushing: false, channel: null, subscribedOnce: false,
-  buffer: null, orphans: {}, warned: {}, booting: false
+  buffer: null, orphans: {}, warned: {}, booting: false,
+  // optional v3 database features (migration_v3.sql). Detected from the task rows we load anyway,
+  // so an old database never sees a request it can't answer (no errors, no console noise).
+  caps: { important: false, myDay: false }, myDayChannel: null, myDayBusy: false
 };
 function prefsOf(board) { const p = {}; PREF_FIELDS.forEach(k => { if (board && board[k] !== undefined) p[k] = clone(board[k]); }); return p; }
 function loadPrefs() { try { return JSON.parse(storage.get(PREFS_KEY) || '{}') || {}; } catch (e) { return {}; } }
@@ -2561,7 +3267,7 @@ function readCache() { try { return JSON.parse(storage.get(CACHE_KEY) || 'null')
 function cloudPersist() {
   if (!cloud.active || !cloud.user) return;
   storage.set(CACHE_KEY, JSON.stringify({
-    v: 1, userId: cloud.user.id, email: cloud.email, boardId: cloud.boardId, role: cloud.role, boards: cloud.boards, access: cloud.access,
+    v: CACHE_VERSION, caps: cloud.caps, userId: cloud.user.id, email: cloud.email, boardId: cloud.boardId, role: cloud.role, boards: cloud.boards, access: cloud.access,
     canCreate: cloud.canCreate, rows: cloud.rows, shadow: cloud.shadow, queue: cloud.queue, seq: cloud.seq, offset: cloud.offset, state
   }));
 }
@@ -2577,14 +3283,15 @@ function canon(v) {
   return JSON.stringify(v === undefined ? null : v);
 }
 const SER = {
-  boards: () => ({ id: cloud.boardId, name: state.board.name, members: state.members }),
+  boards: () => ({ id: cloud.boardId, name: state.board.name, members: state.members, settings: state.settings || {} }),
   buckets: (b, order) => ({ id: b.id, board_id: cloud.boardId, name: b.name, color: b.color || '', collapsed: !!b.collapsed, sort_order: order }),
   labels: (l, order) => ({ id: l.id, board_id: cloud.boardId, name: l.name || '', color: l.color || '', sort_order: order }),
   tasks: (x) => ({
     id: x.id, board_id: cloud.boardId, bucket_id: x.bucketId || null, title: x.title, progress: x.progress, priority: x.priority,
     start_date: x.start || null, due_date: x.due || null, repeat: x.repeat, assignee_ids: x.assignees, label_ids: x.labels, notes: x.notes,
     checklist: x.checklist, show_checklist: !!x.showChecklist, attachments: x.attachments, sort_order: x.order,
-    completed_at: toIso(x.completedAt), completed_by: x.completedBy || null, creator_member: x.createdBy || null
+    completed_at: toIso(x.completedAt), completed_by: x.completedBy || null, creator_member: x.createdBy || null,
+    ...(cloud.caps.important ? { is_important: !!x.important } : {})
   }),
   comments: (c, taskId) => ({ id: c.id, board_id: cloud.boardId, task_id: taskId, author_member: c.author || null, body: c.text })
 };
@@ -2597,12 +3304,48 @@ function rowToTask(r, comments) {
     repeat: r.repeat, assignees: r.assignee_ids || [], labels: r.label_ids || [], notes: r.notes || '', checklist: r.checklist || [],
     showChecklist: r.show_checklist, attachments: r.attachments || [], comments: comments || [], order: Number(r.sort_order) || 0,
     created: toMs(r.created_at), modified: toMs(r.updated_at), createdBy: r.creator_member || '',
-    completedAt: toMs(r.completed_at), completedBy: r.completed_by || null
+    completedAt: toMs(r.completed_at), completedBy: r.completed_by || null,
+    important: 'is_important' in r ? !!r.is_important : !!localStars()[r.id]
   });
+}
+/* ---------- stars without the v3 column: remembered in this browser only ---------- */
+let starCache = null;
+function localStars() {
+  const scope = cloud.boardId || '';
+  if (!starCache || starCache.scope !== scope) {
+    let all = {}; try { all = JSON.parse(storage.get(STARS_KEY) || '{}') || {}; } catch (e) { all = {}; }
+    starCache = { scope, map: all[scope] || {} };
+  }
+  return starCache.map;
+}
+function saveLocalStars() {
+  let all = {}; try { all = JSON.parse(storage.get(STARS_KEY) || '{}') || {}; } catch (e) { all = {}; }
+  if (Object.keys(starCache.map).length) all[starCache.scope] = starCache.map; else delete all[starCache.scope];
+  storage.set(STARS_KEY, JSON.stringify(all));
+}
+function rememberLocalStar(task) {
+  if (appMode !== 'cloud' || cloud.caps.important) return;
+  const m = localStars(); if (task.important) m[task.id] = 1; else delete m[task.id];
+  saveLocalStars();
+}
+/** Once the column exists, hand the stars kept in this browser over to the database. */
+function adoptLocalStars() {
+  const m = localStars(); const ids = Object.keys(m);
+  if (!ids.length) return;
+  ids.forEach(id => { const x = state.tasks.find(t2 => t2.id === id); if (x) x.important = true; });
+  starCache.map = {}; saveLocalStars();
+}
+/** v3 features are on when the task rows carry the is_important column (migration_v3 adds it together with my_day). */
+function detectCaps(taskRows) {
+  if (!taskRows.length) return false;
+  const on = 'is_important' in taskRows[0];
+  if (on === cloud.caps.important) return false;
+  cloud.caps = { important: on, myDay: on };
+  return true;
 }
 /** Canonical form of a server row, comparable with the serialised local state. */
 function canonRow(tb, r) {
-  if (tb === 'boards') return canon({ id: r.id, name: r.name, members: normalizeState({ buckets: [], tasks: [], members: r.members || [] }).members });
+  if (tb === 'boards') { const n = normalizeState({ buckets: [], tasks: [], members: r.members || [], settings: r.settings }); return canon({ id: r.id, name: r.name, members: n.members, settings: n.settings }); }
   if (tb === 'buckets') return canon(SER.buckets(rowToBucket(r), Number(r.sort_order)));
   if (tb === 'labels') return canon(SER.labels(rowToLabel(r), Number(r.sort_order)));
   if (tb === 'tasks') return canon(SER.tasks(rowToTask(r)));
@@ -2661,7 +3404,8 @@ function stateFromRows(rows) {
     buckets: sortBy(rows.buckets).map(rowToBucket),
     members: board.members || [],
     labels: sortBy(rows.labels).map(rowToLabel),
-    tasks: Object.values(rows.tasks).map(r => rowToTask(r, (comments[r.id] || []).sort((a, b) => a.ts - b.ts)))
+    tasks: Object.values(rows.tasks).map(r => rowToTask(r, (comments[r.id] || []).sort((a, b) => a.ts - b.ts))),
+    settings: board.settings || {}
   });
   return s;
 }
@@ -2733,7 +3477,7 @@ async function sendUpserts(tb, ops) {
   let res;
   if (tb === 'boards') {
     const o = ops[ops.length - 1];
-    res = await cloud.sb.from('boards').update({ name: o.row.name, members: o.row.members, updated_at: o.at }).eq('id', o.id).select(META_COLS);
+    res = await cloud.sb.from('boards').update({ name: o.row.name, members: o.row.members, settings: o.row.settings || {}, updated_at: o.at }).eq('id', o.id).select(META_COLS);
   } else {
     res = await cloud.sb.from(tb).upsert(ops.map(o => Object.assign({}, o.row, { updated_at: o.at })), { onConflict: 'id' }).select(META_COLS);
   }
@@ -2777,6 +3521,7 @@ async function flush() {
     for (const tb of ['comments', 'tasks', 'labels', 'buckets']) if (dels[tb]) await sendDeletes(tb, dels[tb]);
     const wasDown = cloud.netDown; setNet(true); if (wasDown) reloadSoon();
     again = cloud.queue.length > 0;
+    flushMyDay();
   } catch (e) {
     if (e.network) setNet(false); else console.warn('[sync]', e);
   } finally {
@@ -2805,8 +3550,8 @@ function applyRemote(tb, r, force) {
   if (cloud.shadow[tb][r.id] === c && !force) return 'meta';
   cloud.shadow[tb][r.id] = c;
   if (tb === 'boards') {
-    const n = normalizeState({ buckets: [], tasks: [], members: r.members || [] });
-    state.board.name = r.name; state.members = n.members;
+    const n = normalizeState({ buckets: [], tasks: [], members: r.members || [], settings: r.settings });
+    state.board.name = r.name; state.members = n.members; state.settings = n.settings;
     if (!memberById(state.board.currentUserId)) state.board.currentUserId = (state.members[0] || {}).id || '';
     matchCurrentUser();
   } else if (tb === 'buckets' || tb === 'labels') {
@@ -2853,6 +3598,8 @@ function onRealtime(tb, payload) {
 function handleRealtime(tb, payload) {
   if (tb === 'board_members') { reloadAccessSoon(); return; }
   syncDiff(); // turn any not-yet-diffed local edits into pending changes first
+  // the v3 migration was run while this page is open: reload once so stars/My Day switch to the database
+  if (tb === 'tasks' && payload.eventType !== 'DELETE' && payload.new && payload.new.id && ('is_important' in payload.new) !== cloud.caps.important) { reloadSoon(); return; }
   let changed;
   if (payload.eventType === 'DELETE') changed = removeRemote(tb, (payload.old || {}).id);
   else changed = applyRemote(tb, payload.new);
@@ -2890,6 +3637,7 @@ async function loadBoard() {
     syncDiff(); // capture any local edits before swapping state
     const rows = emptyMaps();
     SYNC_TABLES.forEach((tb, i) => { res[i].data.forEach(r => { rows[tb][r.id] = r; }); });
+    const capsChanged = detectCaps(res[3].data);
     const prev = state; const pending = cloud.loaded ? cloud.queue.slice() : [];
     cloud.rows = rows;
     cloud.access = res[5].data;
@@ -2898,6 +3646,7 @@ async function loadBoard() {
     // keep local changes that have not reached the server yet
     pending.forEach(o => mergePending(fresh, prev, o));
     state = fresh; matchCurrentUser();
+    if (cloud.caps.important) adoptLocalStars();
     cloud.shadow = shadowFromRows(rows);
     const queued = cloud.queue; cloud.queue = [];
     cloud.loaded = true;
@@ -2905,6 +3654,8 @@ async function loadBoard() {
     cloud.queue.forEach(o => { const old = queued.find(x => x.tb === o.tb && x.id === o.id && canon(x.row) === canon(o.row)); if (old) o.at = old.at; });
     setNet(true);
     scheduleRender(true); cloudPersistSoon(); renderSync();
+    if (capsChanged || !cloud.myDayChannel) subscribeMyDay();
+    loadMyDayCloud();
     return true;
   } finally {
     const buf = cloud.buffer || []; cloud.buffer = null;
@@ -2913,7 +3664,7 @@ async function loadBoard() {
 }
 function mergePending(fresh, prev, o) {
   const find = (list, id) => list.findIndex(x => x.id === id);
-  if (o.tb === 'boards') { fresh.board.name = prev.board.name; fresh.members = clone(prev.members); return; }
+  if (o.tb === 'boards') { fresh.board.name = prev.board.name; fresh.members = clone(prev.members); fresh.settings = clone(prev.settings || {}); return; }
   if (o.tb === 'buckets' || o.tb === 'labels') {
     const list = fresh[o.tb], i = find(list, o.id);
     if (o.op === 'delete') { if (i >= 0) list.splice(i, 1); return; }
@@ -2980,6 +3731,59 @@ function subscribe() {
   cloud.channel = ch;
 }
 
+/* ---------- My Day in the database (my_day table, migration_v3) ----------
+ * Personal: each row belongs to one person (RLS: user_id = auth.uid()). Without the table,
+ * My Day simply stays in this browser; queued changes are uploaded once the table exists. */
+function cloudMyDay(taskId, on) {
+  if (appMode !== 'cloud' || !cloud.active || !cloud.user) return;
+  myDay.pending = myDay.pending.filter(p => p.id !== taskId).concat([{ id: taskId, on: !!on }]);
+  saveMyDayLocal();
+  flushMyDay();
+}
+async function flushMyDay() {
+  if (!cloud.caps.myDay || !cloud.sb || !cloud.user || !cloud.user.aud || cloud.myDayBusy || !myDay.pending.length || !navigator.onLine) return;
+  cloud.myDayBusy = true;
+  try {
+    for (const p of myDay.pending.slice()) {
+      // a task created a moment ago must reach the server before it can be linked
+      if (p.on && (pendingOp('tasks', p.id) || !cloud.rows.tasks[p.id])) continue;
+      const res = p.on
+        ? await cloud.sb.from('my_day').upsert({ board_id: cloud.boardId, task_id: p.id, user_id: cloud.user.id, day: myDay.day }, { onConflict: 'user_id,task_id,day', ignoreDuplicates: true })
+        : await cloud.sb.from('my_day').delete().eq('user_id', cloud.user.id).eq('task_id', p.id).eq('day', myDay.day);
+      if (res.error) {
+        if (isNetErr(res.error)) break;
+        if (res.error.code === '23503') continue; // task not on the server (yet) — retry later
+        console.warn('[my day]', res.error.code, res.error.message);
+      }
+      myDay.pending = myDay.pending.filter(x => x !== p);
+    }
+    saveMyDayLocal();
+  } finally { cloud.myDayBusy = false; }
+}
+async function loadMyDayCloud() {
+  if (!cloud.caps.myDay || !cloud.sb || !cloud.user || !cloud.boardId) return;
+  rollMyDay();
+  const day = myDay.day;
+  const res = await cloud.sb.from('my_day').select('task_id').eq('board_id', cloud.boardId).eq('user_id', cloud.user.id).eq('day', day);
+  if (res.error || day !== myDay.day) return;
+  const ids = new Set(res.data.map(r => r.task_id));
+  myDay.pending.forEach(p => { if (p.on) ids.add(p.id); else ids.delete(p.id); }); // our not-yet-sent changes win
+  const same = ids.size === myDay.ids.size && [...ids].every(id => myDay.ids.has(id));
+  myDay.ids = ids; saveMyDayLocal();
+  if (!same) scheduleRender();
+  flushMyDay();
+}
+const cloudReloadMyDay = debounce(() => { loadMyDayCloud().catch(() => { }); }, 250);
+function subscribeMyDay() {
+  if (cloud.myDayChannel) { try { cloud.sb.removeChannel(cloud.myDayChannel); } catch (e) { /* ignore */ } cloud.myDayChannel = null; }
+  if (!cloud.caps.myDay || !cloud.sb || !cloud.user || !cloud.user.aud) return;
+  // only this person's rows (RLS + filter); removals from other devices are picked up on focus / reload
+  const ch = cloud.sb.channel('bst-myday-' + cloud.boardId + '-' + cloud.user.id);
+  ['INSERT', 'UPDATE'].forEach(ev => ch.on('postgres_changes', { event: ev, schema: 'public', table: 'my_day', filter: 'user_id=eq.' + cloud.user.id }, () => cloudReloadMyDay()));
+  ch.subscribe();
+  cloud.myDayChannel = ch;
+}
+
 /* ---------- boot & sign-in ---------- */
 function loadScript(src) {
   return new Promise((resolve, reject) => {
@@ -3027,10 +3831,15 @@ function startFromCache(c) {
   cloud.email = c.email || ''; cloud.boardId = c.boardId; cloud.role = c.role; cloud.boards = c.boards || [];
   cloud.access = c.access || []; cloud.canCreate = !!c.canCreate;
   cloud.rows = c.rows || emptyMaps(); cloud.shadow = c.shadow || emptyMaps(); cloud.queue = c.queue || []; cloud.seq = c.seq || cloud.queue.length; cloud.offset = c.offset || 0;
+  cloud.caps = c.caps && typeof c.caps === 'object' ? { important: !!c.caps.important, myDay: !!c.caps.myDay } : { important: false, myDay: false };
+  // a cache written by an older version holds a shadow in the old row shape: rebuild it from the server
+  // rows (queued edits stay queued) so an upgrade never re-uploads every task
+  if (c.v !== CACHE_VERSION) cloud.shadow = shadowFromRows(cloud.rows);
   try { state = normalizeState(c.state); } catch (e) { state = stateFromRows(cloud.rows); }
   cloud.loaded = true;
   Object.assign(state.board, prefsOf(loadPrefs()));
   cloud.active = true;
+  loadMyDayLocal();
   hideGate(); applyTheme(); renderTopbar(); renderMain(); renderSync(); openFromHash();
 }
 async function onSignedIn(session) {
@@ -3081,6 +3890,7 @@ async function openBoard(id) {
   cloud.boardId = id;
   cloud.role = (cloud.boards.find(b => b.id === id) || {}).role || cloud.role;
   cloud.active = true;
+  loadMyDayLocal();
   subscribe();
   const ok = await loadBoard();
   if (ok) { hideGate(); savePrefs(); flush(); openFromHash(); }
@@ -3099,6 +3909,7 @@ async function createBoard(name) {
   cloud.boards.push({ id, name: name || DEFAULT_BOARD_NAME, role: 'owner' });
   cloud.boardId = id; cloud.role = 'owner'; cloud.active = true;
   cloud.rows = emptyMaps(); cloud.shadow = emptyMaps(); cloud.queue = [];
+  loadMyDayLocal();
   const fresh = await cloud.sb.from('boards').select('*').eq('id', id);
   if (fresh.data && fresh.data[0]) { cloud.rows.boards[id] = fresh.data[0]; cloud.shadow.boards[id] = canonRow('boards', fresh.data[0]); }
   state = normalizeState(Object.assign(s, { board: Object.assign(s.board, prefsOf(loadPrefs()), { name: name || DEFAULT_BOARD_NAME }) }));
@@ -3113,8 +3924,8 @@ async function createBoard(name) {
 async function signOut() {
   const n = cloud.queue.length;
   const go = async () => {
-    try { if (cloud.channel) cloud.sb.removeChannel(cloud.channel); } catch (e) { /* ignore */ }
-    cloud.channel = null; cloud.active = false; cloud.loaded = false; cloud.user = null; cloud.queue = [];
+    try { if (cloud.channel) cloud.sb.removeChannel(cloud.channel); if (cloud.myDayChannel) cloud.sb.removeChannel(cloud.myDayChannel); } catch (e) { /* ignore */ }
+    cloud.channel = null; cloud.myDayChannel = null; cloud.active = false; cloud.loaded = false; cloud.user = null; cloud.queue = [];
     storage.remove(CACHE_KEY);
     try { await cloud.sb.auth.signOut(); } catch (e) { /* offline */ }
     ui.openTaskId = null; document.getElementById('panel').classList.remove('open');
@@ -3194,7 +4005,17 @@ function promptNewBoard() {
 
 /* ---------- Share / Invite ---------- */
 function renderShareTab(host, rerender) {
-  ui.shareRefresh = () => { if (document.body.contains(host)) rerender(); else ui.shareRefresh = null; };
+  // a live access-list update re-renders this tab: keep what the owner is typing (and the focus)
+  ui.shareRefresh = () => {
+    if (!document.body.contains(host)) { ui.shareRefresh = null; return; }
+    const old = document.getElementById('inviteEmail'), oldRole = document.getElementById('inviteRole');
+    const keep = old ? old.value : '', keepRole = oldRole ? oldRole.value : '', hadFocus = old && document.activeElement === old;
+    rerender();
+    const ne = document.getElementById('inviteEmail'), nr = document.getElementById('inviteRole');
+    if (ne && keep) { ne.value = keep; }
+    if (nr && keepRole && nr.value !== keepRole) { nr.value = keepRole; nr.dispatchEvent(new Event('change')); }
+    if (ne && hadFocus) ne.focus();
+  };
   const owner = cloud.role === 'owner';
   const online = navigator.onLine && !cloud.netDown;
   const roleLabel = (r) => t('role' + r.replace(/^./, c => c.toUpperCase()));
@@ -3426,7 +4247,13 @@ function showGate(kind, opts = {}) {
         h('button', { class: 'btn', id: 'checkAgainBtn', onClick: async () => { showGate('loading'); try { await cloud.sb.rpc('claim_invites'); await enterBoards(false); } catch (e) { showGate('offline'); } } }, t('checkAgain')),
         h('button', { class: 'btn', onClick: signOut }, icon('logout'), t('signOut')), langBtn));
   } else if (kind === 'loading') {
-    add(...head(t('loadingBoard')), h('div', { class: 'gate-spinner', 'aria-hidden': 'true' }));
+    // skeleton of the board instead of a bare spinner
+    card.className = 'gate-skeleton'; card.removeAttribute('role'); card.removeAttribute('aria-modal');
+    const bar = (w) => h('span', { class: 'skel-bar', style: { width: w } });
+    const col = (n) => h('div', { class: 'skel-col' }, bar('45%'), ...Array.from({ length: n }, (_, i) => h('div', { class: 'skel-card' }, bar(['80%', '62%', '74%'][i % 3]), bar('38%'))));
+    add(h('h1', { id: 'gateTitle', class: 'sr-only', 'aria-live': 'polite' }, t('loadingBoard')),
+      h('div', { class: 'skel-top' }, bar('140px'), bar('220px'), h('span', { class: 'skel-dot' })),
+      h('div', { class: 'skel-cols', 'aria-hidden': 'true' }, col(3), col(2), col(4), col(1)));
   } else if (kind === 'offline') {
     add(...head(t('syncOffline', { n: 0 }).replace(/\s*\(.*\)/, '')), h('p', null, t('offlineNoCache')),
       h('div', { class: 'gate-actions' }, h('button', { class: 'btn primary', onClick: () => location.reload() }, t('retry')), langBtn));
@@ -3451,7 +4278,11 @@ window.addEventListener('online', async () => {
   if (hadPending && !cloud.queue.length) toast(t('backOnline'));
 });
 window.addEventListener('offline', () => { if (appMode === 'cloud') setNet(false); });
-setInterval(() => { if (appMode === 'cloud' && cloud.active && cloud.queue.length && !cloud.flushing && navigator.onLine) flush(); }, 5000);
+setInterval(() => {
+  if (appMode !== 'cloud' || !cloud.active || !navigator.onLine) return;
+  if (cloud.queue.length && !cloud.flushing) flush(); else if (myDay.pending.length) flushMyDay();
+}, 5000);
+window.addEventListener('focus', () => { if (appMode === 'cloud' && cloud.active) cloudReloadMyDay(); });
 window.addEventListener('beforeunload', () => { if (appMode === 'cloud' && cloud.active) { syncDiff(); cloudPersist(); } });
 boot();
 </script>

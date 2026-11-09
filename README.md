@@ -18,3 +18,13 @@ Until the backend is connected, the live page shows a **"Backend not configured"
 - `setup.sql` – database schema, RLS policies and realtime setup
 - `SETUP.md` – setup and deployment guide
 - `supabase/functions/invite-member/index.ts` – Edge Function that sends invitation e-mails
+
+## v3 database upgrade (migration_v3.sql)
+
+v3 adds subtasks on cards, star / Important, My Day, smart lists and a created-date view. The database change is **additive only**: a new column `tasks.is_important` and a new table `my_day` (personal, RLS-protected). Nothing is dropped, renamed or rewritten.
+
+1. Supabase Dashboard › SQL Editor › New query → paste `migration_v3.sql` → **Run** ("Success. No rows returned"). Safe to run again.
+2. Run the check at the bottom of the file: expect `1 | 1 | 4 | 1 | <task count unchanged>`.
+3. Reload every open BST Planner tab after deploying.
+
+Without the migration the app still works: star and My Day are kept in the browser and uploaded once the migration has run.
